@@ -22,8 +22,6 @@ var mevcutBirlikteLokayon = null;   // Birlikte oynanan lokasyon ID
 var bekleyenDavetKey = null;        // Bekleyen gelen davet key'i
 var pairingOpenDurum = false;       // Görünürlük durumu
 var birlikteOynaPopupGosterildi = false; // Session başına 1 kere popup
-var navigasyonAktif = false;            // Karşılıklı navigasyon aktif mi
-var eslesmeGenelDinleyici = false;      // Eşleşme genel dinleyici aktif mi
 
 // ──────────────────────────────────────────────
 // ADIM 1 — BİRLİKTE OYNA TOGGLE (GÖRÜNÜR OL)
@@ -401,10 +399,6 @@ function sohbetBaslat(pairId) {
         }
     }
 
-    // Navigasyon kapat butonunu gizle (başlangıçta)
-    var navKapatWrapper = document.getElementById('sohbet-nav-kapat-wrapper');
-    if (navKapatWrapper) navKapatWrapper.classList.add('gizli');
-
     // Ekranı göster
     ekranGoster('ekran-sohbet');
 
@@ -418,35 +412,6 @@ function sohbetBaslat(pairId) {
 
     // Partner konumunu dinle
     partnerKonumDinle();
-
-    // Eşleşme genel dinleyici (nav senkron + mesajlaşma bitirme)
-    if (!eslesmeGenelDinleyici) {
-        eslesmeGenelDinleyici = true;
-        eslesmeDinle(pairId, function(data) {
-            if (!data) return;
-            mevcutEslesme = data;
-
-            // A) Navigasyon kapatma senkronu
-            if (navigasyonAktif && data.navActive === false) {
-                console.log("[multiplayer.js] Partner navigasyonu kapattı, senkronize ediliyor...");
-                navigasyonLokalKapat();
-            }
-
-            // B) İki taraf da navOpen → navigasyon başlat
-            if (!navigasyonAktif && data.senderNavOpen && data.receiverNavOpen && data.navActive !== false) {
-                console.log("[multiplayer.js] İki taraf da navigasyonu açtı!");
-                eslesmeGuncelle(mevcutEslesmeKey, { navActive: true });
-                karsilikliNavigasyonBaslat();
-            }
-
-            // C) Mesajlaşma bitirildi senkronu
-            if (data.status === 'ended') {
-                console.log("[multiplayer.js] Partner mesajlaşmayı bitirdi.");
-                bildirimGoster("Eşleşme sona erdi.", "bilgi");
-                eslesmeLokalBitir();
-            }
-        });
-    }
 }
 
 function chatMesajGoster(mesaj) {
@@ -485,25 +450,25 @@ function mesajGonderUI() {
 }
 
 function sohbettenCik() {
-    console.log("[multiplayer.js] Sohbetten çıkılmak isteniyor...");
+    console.log("[multiplayer.js] Sohbetten çıkılıyor...");
 
-    // Onay sor
-    var html = '<div style="text-align:center;">' +
-        '<div style="font-size:2rem;margin-bottom:12px;">👋</div>' +
-        '<h3 style="font-weight:700;margin-bottom:8px;">Mesajlaşmayı Bitir?</h3>' +
-        '<p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:20px;">' +
-            'Eşleşme sona erecek ve iki tarafta da kapanacak. Tekrar davet gönderip başlayabilirsiniz.' +
-        '</p>' +
-        '<div style="display:flex;gap:12px;">' +
-            '<button class="btn btn-outline" style="flex:1;" onclick="modalKapat()">Vazgeç</button>' +
-            '<button class="btn btn-red" style="flex:1;" onclick="modalKapat();mesajlasmayiBitir()">Bitir</button>' +
-        '</div>' +
-    '</div>';
+    // Dinlemeleri durdur
+    if (mevcutEslesmeKey) {
+        chatDinlemeyiBirak(mevcutEslesmeKey);
+    }
+    mesafeKontrolDurdur();
+    partnerKonumDinlemeyiBirak();
+    navDinleyiciAktif = false;
 
-    modalGoster(html);
+    // Nav butonunu temizle
+    var navWrapper = document.getElementById('karsilikli-nav-wrapper');
+    if (navWrapper) navWrapper.remove();
+
+    // Haritaya dön
+    ekranGoster('ekran-harita');
 }
 
-// Partner navigasyonu (sohbet üst bar butonu)
+// Partner navigasyonu
 function partnerNavigasyonBaslat() {
     if (partnerKonum.lat && partnerKonum.lng) {
         navigasyonBaslat(partnerKonum.lat, partnerKonum.lng);
@@ -528,246 +493,6 @@ function partnerKonumDinlemeyiBirak() {
     if (partnerBilgileri && mevcutBirlikteLokayon) {
         dbDinlemeyiBirak('active_players/' + mevcutBirlikteLokayon + '/' + partnerBilgileri.uid);
     }
-}
-
-// ──────────────────────────────────────────────
-// KARŞILIKLI NAVİGASYON
-// ──────────────────────────────────────────────
-var navDinleyiciAktif = false;
-
-function karsilikliNavigasyonTeklifGonder() {
-    console.log("[multiplayer.js] Navigasyon teklifi gönderiliyor...");
-
-    if (!mevcutEslesmeKey || !mevcutKullanici || !mevcutEslesme) {
-        bildirimGoster("Eşleşme bulunamadı.", "uyari");
-        return;
-    }
-
-    var benSenderMiyim = (mevcutKullanici.uid === mevcutEslesme.senderId);
-    var guncelAlan = benSenderMiyim ? 'senderNavOpen' : 'receiverNavOpen';
-
-    var update = {};
-    update[guncelAlan] = true;
-    eslesmeGuncelle(mevcutEslesmeKey, update);
-
-    // Butonu güncelle
-    var btn = document.getElementById('karsilikli-nav-btn');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '✅ Navigasyon isteğin gönderildi';
-    }
-
-    var durumEl = document.getElementById('karsilikli-nav-durum');
-    if (durumEl) durumEl.textContent = '⏳ Partnerin de "Navigasyonu Aç" demesi bekleniyor...';
-
-    bildirimGoster("Navigasyon isteğin gönderildi! Partner bekleniyor... 🧭", "bilgi");
-
-    // NOT: Genel dinleyici (sohbetBaslat'ta) iki tarafın da navOpen olmasını yönetiyor.
-}
-
-function karsilikliNavigasyonBaslat() {
-    console.log("[multiplayer.js] Karşılıklı navigasyon başlatılıyor!");
-    navigasyonAktif = true;
-
-    bildirimGoster("🧭 Her ikiniz de navigasyonu kabul etti! Yol tarifi açılıyor...", "basari");
-
-    // Durumu güncelle
-    var durumEl = document.getElementById('karsilikli-nav-durum');
-    if (durumEl) durumEl.textContent = '🧭 Navigasyon aktif!';
-
-    var btn = document.getElementById('karsilikli-nav-btn');
-    if (btn) {
-        btn.innerHTML = '🧭 Navigasyon Aktif';
-        btn.disabled = true;
-        btn.classList.remove('btn-blue');
-        btn.classList.add('btn-green');
-    }
-
-    // Navigasyon kapat butonunu göster
-    var navKapatWrapper = document.getElementById('sohbet-nav-kapat-wrapper');
-    if (navKapatWrapper) navKapatWrapper.classList.remove('gizli');
-
-    // Sohbet üst bardaki navigasyon butonunu "Haritayı Gör" olarak değiştir
-    var sohbetNavBtn = document.querySelector('.sohbet-nav-btn');
-    if (sohbetNavBtn) {
-        sohbetNavBtn.innerHTML = '🗺️ Haritayı Gör';
-        sohbetNavBtn.setAttribute('onclick', 'haritayaGecGeriDon()');
-    }
-
-    // Partner konumuna navigasyon başlat — EKRAN GEÇİŞİ OLMADAN (3. parametre true)
-    if (partnerKonum.lat && partnerKonum.lng) {
-        navigasyonBaslat(partnerKonum.lat, partnerKonum.lng, true);
-    } else {
-        bildirimGoster("Partner konumu bekleniyor...", "bilgi");
-        var navBekleInterval = setInterval(function() {
-            if (partnerKonum.lat && partnerKonum.lng) {
-                clearInterval(navBekleInterval);
-                navigasyonBaslat(partnerKonum.lat, partnerKonum.lng, true);
-            }
-        }, 2000);
-        setTimeout(function() { clearInterval(navBekleInterval); }, 30000);
-    }
-}
-
-// ──────────────────────────────────────────────
-// HARİTAYA GEÇ / SOHBETE GERİ DÖN
-// ──────────────────────────────────────────────
-function haritayaGecGeriDon() {
-    ekranGoster('ekran-harita');
-    // Haritada sohbete dön butonu göster
-    var navKapatBtn = document.getElementById('nav-kapat-btn');
-    if (navKapatBtn) {
-        navKapatBtn.classList.remove('gizli');
-        navKapatBtn.textContent = '💬 Sohbete Dön';
-        navKapatBtn.setAttribute('onclick', 'sohbeteGeriDon()');
-    }
-}
-
-function sohbeteGeriDon() {
-    ekranGoster('ekran-sohbet');
-    // Haritadaki butonu eski haline döndür
-    var navKapatBtn = document.getElementById('nav-kapat-btn');
-    if (navKapatBtn) {
-        if (navigasyonAktif) {
-            navKapatBtn.textContent = '💬 Sohbete Dön';
-            navKapatBtn.setAttribute('onclick', 'sohbeteGeriDon()');
-        } else {
-            navKapatBtn.textContent = '✕ Navigasyonu Kapat';
-            navKapatBtn.setAttribute('onclick', 'navigasyonTemizle()');
-            navKapatBtn.classList.add('gizli');
-        }
-    }
-}
-
-// ──────────────────────────────────────────────
-// NAVİGASYON KAPAT (SENKRONİZE)
-// ──────────────────────────────────────────────
-function navigasyonKapatSenkron() {
-    if (!mevcutEslesmeKey) return;
-
-    console.log("[multiplayer.js] Navigasyon kapatılıyor (senkron)...");
-
-    eslesmeGuncelle(mevcutEslesmeKey, {
-        navActive: false,
-        senderNavOpen: false,
-        receiverNavOpen: false
-    });
-
-    // Lokal kapatma
-    navigasyonLokalKapat();
-}
-
-function navigasyonLokalKapat() {
-    console.log("[multiplayer.js] Navigasyon lokal olarak kapatılıyor...");
-    navigasyonAktif = false;
-
-    // Haritadaki navigasyonu temizle
-    if (typeof navigasyonTemizle === 'function') {
-        navigasyonTemizle();
-    }
-
-    // Navigasyon kapat butonunu gizle
-    var navKapatWrapper = document.getElementById('sohbet-nav-kapat-wrapper');
-    if (navKapatWrapper) navKapatWrapper.classList.add('gizli');
-
-    // Sohbetteyse: nav butonunu tekrar "Navigasyonu Aç" yap
-    var btn = document.getElementById('karsilikli-nav-btn');
-    if (btn) {
-        btn.innerHTML = '🧭 Navigasyonu Aç';
-        btn.disabled = false;
-        btn.classList.remove('btn-green');
-        btn.classList.add('btn-blue');
-    }
-
-    var durumEl = document.getElementById('karsilikli-nav-durum');
-    if (durumEl) durumEl.textContent = '';
-
-    // Sohbet üst bardaki butonu eski haline döndür
-    var sohbetNavBtn = document.querySelector('.sohbet-nav-btn');
-    if (sohbetNavBtn) {
-        sohbetNavBtn.innerHTML = '🧭 Navigasyon';
-        sohbetNavBtn.setAttribute('onclick', 'partnerNavigasyonBaslat()');
-    }
-
-    // Haritadaki nav-kapat-btn'i eski haline döndür
-    var navKapatBtn = document.getElementById('nav-kapat-btn');
-    if (navKapatBtn) {
-        navKapatBtn.textContent = '✕ Navigasyonu Kapat';
-        navKapatBtn.setAttribute('onclick', 'navigasyonTemizle()');
-        navKapatBtn.classList.add('gizli');
-    }
-
-    // Eğer harita ekranındaysak sohbete döndür
-    var haritaEkran = document.getElementById('ekran-harita');
-    if (haritaEkran && !haritaEkran.classList.contains('gizli') && mevcutEslesmeKey) {
-        ekranGoster('ekran-sohbet');
-    }
-
-    bildirimGoster("🧭 Navigasyon kapatıldı.", "bilgi");
-}
-
-// ──────────────────────────────────────────────
-// MESAJLAŞMAYI BİTİR (SENKRONİZE)
-// ──────────────────────────────────────────────
-function mesajlasmayiBitir() {
-    if (!mevcutEslesmeKey) return;
-
-    console.log("[multiplayer.js] Mesajlaşma bitiriliyor...");
-
-    // Önce navigasyon aktifse onu da kapat
-    if (navigasyonAktif) {
-        navigasyonLokalKapat();
-    }
-
-    // Firebase'e status: ended yaz
-    eslesmeGuncelle(mevcutEslesmeKey, {
-        status: 'ended',
-        navActive: false,
-        senderNavOpen: false,
-        receiverNavOpen: false,
-        endedAt: Date.now()
-    });
-
-    bildirimGoster("Eşleşme sona erdi.", "bilgi");
-    eslesmeLokalBitir();
-}
-
-function eslesmeLokalBitir() {
-    console.log("[multiplayer.js] Eşleşme lokal olarak bitiriliyor...");
-
-    // Navigasyon aktifse kapat
-    if (navigasyonAktif) {
-        navigasyonLokalKapat();
-    }
-
-    // Dinlemeleri durdur
-    if (mevcutEslesmeKey) {
-        eslesmeDinlemeyiBirak(mevcutEslesmeKey);
-        chatDinlemeyiBirak(mevcutEslesmeKey);
-    }
-    mesafeKontrolDurdur();
-    partnerKonumDinlemeyiBirak();
-
-    // Nav wrapper'ı temizle
-    var navWrapper = document.getElementById('karsilikli-nav-wrapper');
-    if (navWrapper) navWrapper.remove();
-
-    // Nav kapat wrapper'ı gizle
-    var navKapatWrapper = document.getElementById('sohbet-nav-kapat-wrapper');
-    if (navKapatWrapper) navKapatWrapper.classList.add('gizli');
-
-    // Değişkenleri sıfırla
-    eslesmeAktif = false;
-    mevcutEslesme = null;
-    mevcutEslesmeKey = null;
-    partnerBilgileri = null;
-    partnerKonum = { lat: null, lng: null };
-    navigasyonAktif = false;
-    navDinleyiciAktif = false;
-    eslesmeGenelDinleyici = false;
-
-    // Haritaya dön (davet öncesi durum)
-    ekranGoster('ekran-harita');
 }
 
 // ──────────────────────────────────────────────
@@ -1152,6 +877,89 @@ function davetGonderVeKayit(uid, locationId) {
 }
 
 // ──────────────────────────────────────────────
+// KARŞILIKLI NAVİGASYON
+// ──────────────────────────────────────────────
+var navDinleyiciAktif = false;
+
+function karsilikliNavigasyonTeklifGonder() {
+    console.log("[multiplayer.js] Navigasyon teklifi gönderiliyor...");
+
+    if (!mevcutEslesmeKey || !mevcutKullanici || !mevcutEslesme) {
+        bildirimGoster("Eşleşme bulunamadı.", "uyari");
+        return;
+    }
+
+    var benSenderMiyim = (mevcutKullanici.uid === mevcutEslesme.senderId);
+    var guncelAlan = benSenderMiyim ? 'senderNavOpen' : 'receiverNavOpen';
+
+    var update = {};
+    update[guncelAlan] = true;
+    eslesmeGuncelle(mevcutEslesmeKey, update);
+
+    // Butonu güncelle
+    var btn = document.getElementById('karsilikli-nav-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '✅ Navigasyon isteğin gönderildi';
+    }
+
+    var durumEl = document.getElementById('karsilikli-nav-durum');
+    if (durumEl) durumEl.textContent = '⏳ Partnerin de "Navigasyonu Aç" demesi bekleniyor...';
+
+    bildirimGoster("Navigasyon isteğin gönderildi! Partner bekleniyor... 🧭", "bilgi");
+
+    // Eşleşmeyi dinle — iki taraf da navOpen olunca karşılıklı navigasyon başlat
+    if (!navDinleyiciAktif) {
+        navDinleyiciAktif = true;
+        eslesmeDinle(mevcutEslesmeKey, function(data) {
+            if (!data) return;
+            mevcutEslesme = data;
+
+            if (data.senderNavOpen && data.receiverNavOpen) {
+                eslesmeDinlemeyiBirak(mevcutEslesmeKey);
+                navDinleyiciAktif = false;
+                karsilikliNavigasyonBaslat();
+            }
+        });
+    }
+}
+
+function karsilikliNavigasyonBaslat() {
+    console.log("[multiplayer.js] Karşılıklı navigasyon başlatılıyor!");
+
+    bildirimGoster("🧭 Her ikiniz de navigasyonu kabul etti! Yol tarifi açılıyor...", "basari");
+
+    // Durumu güncelle
+    var durumEl = document.getElementById('karsilikli-nav-durum');
+    if (durumEl) durumEl.textContent = '🧭 Navigasyon aktif!';
+
+    var btn = document.getElementById('karsilikli-nav-btn');
+    if (btn) {
+        btn.innerHTML = '🧭 Navigasyon Aktif';
+        btn.disabled = true;
+        btn.classList.remove('btn-blue');
+        btn.classList.add('btn-green');
+    }
+
+    // Partner konumuna navigasyon başlat
+    if (partnerKonum.lat && partnerKonum.lng) {
+        navigasyonBaslat(partnerKonum.lat, partnerKonum.lng);
+    } else {
+        bildirimGoster("Partner konumu bekleniyor...", "bilgi");
+        // Konum gelince tekrar dene
+        var navBekleInterval = setInterval(function() {
+            if (partnerKonum.lat && partnerKonum.lng) {
+                clearInterval(navBekleInterval);
+                navigasyonBaslat(partnerKonum.lat, partnerKonum.lng);
+            }
+        }, 2000);
+
+        // 30 saniye sonra vazgeç
+        setTimeout(function() { clearInterval(navBekleInterval); }, 30000);
+    }
+}
+
+// ──────────────────────────────────────────────
 // FLOATING BİRLİKTE OYNA BUTONU YÖNETİMİ
 // ──────────────────────────────────────────────
 function floatingBirlikteGuncelle(acikMi) {
@@ -1244,8 +1052,6 @@ function multiplayerTemizle() {
     bekleyenDavetKey = null;
     birlikteMesafeKayip = false;
     navDinleyiciAktif = false;
-    navigasyonAktif = false;
-    eslesmeGenelDinleyici = false;
     floatingBirlikteGuncelle(false);
 
     console.log("[multiplayer.js] Multiplayer temizlendi.");

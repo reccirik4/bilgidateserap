@@ -245,7 +245,11 @@
             </button>
             <p id="bulusma-mesafe-metin" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;"></p>
         </div>
-
+        <div id="sohbet-nav-kapat-wrapper" class="gizli" style="padding:8px 16px;background:var(--bg-card);border-top:1px solid var(--border);text-align:center;">
+            <button id="sohbet-nav-kapat-btn" class="btn btn-red btn-sm btn-block" onclick="navigasyonKapatSenkron()">
+                ❌ Navigasyonu Kapat
+            </button>
+        </div>
         <div class="sohbet-alt">
             <input type="text" id="sohbet-input" class="sohbet-input" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') mesajGonderUI()">
             <button class="sohbet-gonder-btn" onclick="mesajGonderUI()">➤</button>

@@ -420,11 +420,9 @@ function haversineMesafe(lat1, lng1, lat2, lng2) {
 // ──────────────────────────────────────────────
 // NAVİGASYON
 // ──────────────────────────────────────────────
-function navigasyonBaslat(hedefLat, hedefLng) {
-    console.log("[map.js] Navigasyon başlatılıyor:", hedefLat, hedefLng);
-
+function navigasyonBaslat(hedefLat, hedefLng, ekranGecme) {
     if (!mevcutKonum.lat || !mevcutKonum.lng) {
-        bildirimGoster("Konumun henüz alınamadı.", "uyari");
+        bildirimGoster("Konum bilgisi alınamadı.", "uyari");
         return;
     }
 
@@ -436,8 +434,10 @@ function navigasyonBaslat(hedefLat, hedefLng) {
     // Mekan detay açıksa kapat
     mekanDetayKapat();
 
-    // Harita ekranına geç
-    ekranGoster('ekran-harita');
+    // ── DEĞİŞİKLİK: ekranGecme parametresi true ise ekran DEĞİŞTİRME ──
+    if (!ekranGecme) {
+        ekranGoster('ekran-harita');
+    }
 
     var istek = {
         origin: { lat: mevcutKonum.lat, lng: mevcutKonum.lng },
@@ -452,9 +452,11 @@ function navigasyonBaslat(hedefLat, hedefLng) {
             // Yürüme süresi bilgisi
             var bacak = sonuc.routes[0].legs[0];
             bildirimGoster("🚶 " + bacak.distance.text + " — " + bacak.duration.text, "bilgi");
-            // Navigasyon kapat butonunu göster
+            // Navigasyon kapat butonunu göster (sadece harita ekranındaysa)
             var navKapatBtn = document.getElementById('nav-kapat-btn');
-            if (navKapatBtn) navKapatBtn.classList.remove('gizli');
+            if (navKapatBtn && !ekranGecme) {
+                navKapatBtn.classList.remove('gizli');
+            }
         } else {
             console.error("[map.js] Navigasyon hatası:", durum);
             // Fallback: Google Maps'te aç
