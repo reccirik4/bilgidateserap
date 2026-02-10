@@ -1,0 +1,195 @@
+{
+  "version": "3.0",
+  "description": "Museum Quest — Tüm dünya verileri tek dosyada",
+  "cities": [
+    {
+      "id": "london",
+      "name": "London",
+      "center": { "lat": 51.5074, "lng": -0.1278 },
+      "zoom": 13,
+      "isActive": true,
+      "locations": [
+        {
+          "id": "british-museum",
+          "name": "British Museum",
+          "description": "1753'te kurulan, 8 milyondan fazla esere ev sahipliği yapan dünyanın en eski ulusal müzesi. Rosetta Taşı, Elgin Mermerleri ve Mısır mumyaları en ünlü eserleri arasında.",
+          "questionsFile": "questions-british-museum.json",
+          "latitude": 51.518757,
+          "longitude": -0.126168,
+          "address": "Great Russell Street, Bloomsbury, London WC1B 3DG",
+          "difficulty": "medium",
+          "questionCount": 8,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        },
+        {
+          "id": "natural-history-museum",
+          "name": "Natural History Museum",
+          "description": "1881'de açılan, 80 milyon örneğe sahip doğa tarihi müzesi. Dinozor iskeletleri, mavi balina iskeleti ve Darwin'in koleksiyonları ile ünlü. Giriş ücretsizdir.",
+          "questionsFile": "questions-natural-history-museum.json",
+          "latitude": 51.496727,
+          "longitude": -0.176484,
+          "address": "Cromwell Road, South Kensington, London SW7 5BD",
+          "difficulty": "medium",
+          "questionCount": 8,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "science"
+        }
+      ],
+      "isletmeler": [
+        { "id": "biz-london-01", "name": "Store Street Espresso", "description": "Bloomsbury'de bağımsız specialty coffee dükkanı. British Museum'a 2 dakika yürüme mesafesinde.", "address": "40 Store Street, Bloomsbury, London WC1E 7DB", "latitude": 51.5195, "longitude": -0.1293, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-london-02", "name": "Comptoir Libanais", "description": "South Kensington'da Lübnan mutfağı sunan renkli restoran.", "address": "1-5 Exhibition Road, South Kensington, London SW7 2HE", "latitude": 51.4949, "longitude": -0.1741, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-london-03", "name": "NHM Gift Shop", "description": "Natural History Museum ana giriş katındaki hediyelik eşya mağazası.", "address": "Cromwell Road, South Kensington, London SW7 5BD", "latitude": 51.4960, "longitude": -0.1764, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-london-04", "name": "British Museum Tours", "description": "British Museum resmi rehberli tur hizmeti.", "address": "Great Russell Street, London WC1B 3DG", "latitude": 51.5187, "longitude": -0.1261, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-london-05", "name": "V&A Café", "description": "Victoria and Albert Museum içindeki tarihi kafe. 1868'de açılan dünyanın ilk müze restoranı.", "address": "Cromwell Road, London SW7 2RL", "latitude": 51.4966, "longitude": -0.1722, "phone": "", "website": "", "logoURL": "", "isActive": true }
+      ],
+      "oduller": [
+        { "id": "reward-london-01", "title": "Ücretsiz Flat White", "description": "British Museum yakınındaki Store Street Espresso'da geçerli bir adet flat white.", "category": "drink", "type": "points", "requiredPoints": 500, "promoRadius": 0, "businessId": "biz-london-01", "businessName": "Store Street Espresso", "businessLogo": "", "photoURL": "", "latitude": 51.5195, "longitude": -0.1293, "isActive": true },
+        { "id": "reward-london-02", "title": "%20 Yemek İndirimi", "description": "South Kensington'daki Comptoir Libanais'de tek sefere mahsus %20 indirim.", "category": "food", "type": "points", "requiredPoints": 1200, "promoRadius": 0, "businessId": "biz-london-02", "businessName": "Comptoir Libanais", "businessLogo": "", "photoURL": "", "latitude": 51.4949, "longitude": -0.1741, "isActive": true },
+        { "id": "reward-london-03", "title": "Hediyelik Mıknatıs", "description": "Natural History Museum Gift Shop'tan seçeceğin bir buzdolabı mıknatısı.", "category": "shopping", "type": "points", "requiredPoints": 800, "promoRadius": 0, "businessId": "biz-london-03", "businessName": "NHM Gift Shop", "businessLogo": "", "photoURL": "", "latitude": 51.4960, "longitude": -0.1764, "isActive": true },
+        { "id": "reward-london-04", "title": "Müze Turu Bileti", "description": "British Museum'da rehberli tur bileti (normalde £15 değerinde).", "category": "experience", "type": "points", "requiredPoints": 3000, "promoRadius": 0, "businessId": "biz-london-04", "businessName": "British Museum Tours", "businessLogo": "", "photoURL": "", "latitude": 51.5187, "longitude": -0.1261, "isActive": true },
+        { "id": "reward-london-05", "title": "Ücretsiz Çay & Kek", "description": "V&A Café'de bir çay ve bir dilim kek hediye.", "category": "drink", "type": "points", "requiredPoints": 700, "promoRadius": 0, "businessId": "biz-london-05", "businessName": "V&A Café", "businessLogo": "", "photoURL": "", "latitude": 51.4966, "longitude": -0.1722, "isActive": true }
+      ]
+    },
+    {
+      "id": "kent",
+      "name": "Kent",
+      "center": { "lat": 51.3755, "lng": 0.5286 },
+      "zoom": 13,
+      "isActive": true,
+      "locations": [
+        {
+          "id": "detling-kent-test",
+          "name": "Detling Kent (Test)",
+          "description": "Kent'in Maidstone ilçesine bağlı Detling köyü. Kent County Showground'a ev sahipliği yapar. Pilgrim's Way antik yolu buradan geçer. Roma ve Sakson döneminden kalıntılar barındırır.",
+          "questionsFile": "questions-detling-kent-test.json",
+          "latitude": 51.3755095,
+          "longitude": 0.5286293,
+          "address": "Detling, Maidstone, Kent ME14 3HU",
+          "difficulty": "easy",
+          "questionCount": 8,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        }
+      ],
+      "isletmeler": [
+        { "id": "biz-detling-01", "name": "The Cock Horse Inn", "description": "Detling köyünde geleneksel İngiliz pub. Sıcak yemekler ve yerel biralar sunar.", "address": "Pilgrims Way, Detling, Maidstone ME14 3HQ", "latitude": 51.3748, "longitude": 0.5275, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-detling-02", "name": "Kent Showground Café", "description": "Kent County Showground içindeki kafe. Etkinlik günlerinde açıktır.", "address": "Kent County Showground, Detling, Maidstone ME14 3JF", "latitude": 51.3770, "longitude": 0.5310, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-detling-03", "name": "Detling Village Store", "description": "Detling köyündeki bakkal ve hediyelik eşya dükkanı.", "address": "Detling Hill, Detling, Maidstone ME14 3HU", "latitude": 51.3752, "longitude": 0.5290, "phone": "", "website": "", "logoURL": "", "isActive": true }
+      ],
+      "oduller": [
+        { "id": "reward-detling-01", "title": "Ücretsiz Pint Bira", "description": "The Cock Horse Inn'de bir adet yerel bira ikramı.", "category": "drink", "type": "free", "requiredPoints": 0, "promoRadius": 500, "businessId": "biz-detling-01", "businessName": "The Cock Horse Inn", "businessLogo": "", "photoURL": "", "latitude": 51.3748, "longitude": 0.5275, "isActive": true },
+        { "id": "reward-detling-02", "title": "Sıcak İçecek & Pasta", "description": "Kent Showground Café'de bir sıcak içecek ve bir dilim pasta.", "category": "food", "type": "free", "requiredPoints": 0, "promoRadius": 300, "businessId": "biz-detling-02", "businessName": "Kent Showground Café", "businessLogo": "", "photoURL": "", "latitude": 51.3770, "longitude": 0.5310, "isActive": true },
+        { "id": "reward-detling-03", "title": "Hediyelik Kent Anahtarlık", "description": "Detling Village Store'dan Kent sembolü beyaz at anahtarlık.", "category": "shopping", "type": "points", "requiredPoints": 300, "promoRadius": 0, "businessId": "biz-detling-03", "businessName": "Detling Village Store", "businessLogo": "", "photoURL": "", "latitude": 51.3752, "longitude": 0.5290, "isActive": true }
+      ]
+    },
+    {
+      "id": "istanbul",
+      "name": "İstanbul",
+      "center": { "lat": 41.0082, "lng": 28.9784 },
+      "zoom": 14,
+      "isActive": true,
+      "locations": [
+        {
+          "id": "loc_001",
+          "name": "Topkapı Sarayı",
+          "description": "Osmanlı İmparatorluğu'nun 400 yıllık idare merkezi",
+          "questionsFile": "questions-loc_001.json",
+          "latitude": 41.0115,
+          "longitude": 28.9833,
+          "address": "Cankurtaran, 34122 Fatih/İstanbul",
+          "difficulty": "medium",
+          "questionCount": 10,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        },
+        {
+          "id": "loc_002",
+          "name": "Ayasofya",
+          "description": "537 yılında inşa edilen mimari şaheser",
+          "questionsFile": "questions-loc_002.json",
+          "latitude": 41.0086,
+          "longitude": 28.9802,
+          "address": "Sultan Ahmet, Ayasofya Meydanı, 34122 Fatih/İstanbul",
+          "difficulty": "hard",
+          "questionCount": 2,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        },
+        {
+          "id": "loc_003",
+          "name": "İstanbul Arkeoloji Müzeleri",
+          "description": "Üç müzeden oluşan dünyanın en büyük müze komplekslerinden biri",
+          "questionsFile": "questions-loc_003.json",
+          "latitude": 41.0117,
+          "longitude": 28.9814,
+          "address": "Cankurtaran, 34122 Fatih/İstanbul",
+          "difficulty": "easy",
+          "questionCount": 1,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        },
+        {
+          "id": "loc_004",
+          "name": "Basilika Sarnıcı",
+          "description": "532 yılında inşa edilen yeraltı su deposu",
+          "questionsFile": "questions-loc_004.json",
+          "latitude": 41.0084,
+          "longitude": 28.9779,
+          "address": "Alemdar, Yerebatan Cd. 1/3, 34110 Fatih/İstanbul",
+          "difficulty": "medium",
+          "questionCount": 1,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        },
+        {
+          "id": "loc_005",
+          "name": "Türk ve İslam Eserleri Müzesi",
+          "description": "İbrahim Paşa Sarayı'nda konumlanan zengin koleksiyon",
+          "questionsFile": "questions-loc_005.json",
+          "latitude": 41.0063,
+          "longitude": 28.9753,
+          "address": "Sultanahmet Mah., 34122 Fatih/İstanbul",
+          "difficulty": "medium",
+          "questionCount": 1,
+          "entryRadius": 1000,
+          "exitRadius": 2000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        }
+      ],
+      "isletmeler": [
+        { "id": "biz_001", "name": "Kahve Dünyası", "description": "Sultanahmet'te popüler Türk kahve zinciri.", "address": "Sultanahmet Mah. No:12", "latitude": 41.0120, "longitude": 28.9840, "phone": "0212 555 1234", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz_002", "name": "Tarihi Sultanahmet Köftecisi", "description": "1920'den beri hizmet veren ünlü köfteci.", "address": "Sultanahmet Mah. Divanyolu Cad. No:12", "latitude": 41.0070, "longitude": 28.9760, "phone": "0212 520 0566", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz_003", "name": "Grand Bazaar Hediyelik", "description": "Kapalıçarşı'da hediyelik eşya dükkanı.", "address": "Kapalıçarşı, Fatih", "latitude": 41.0107, "longitude": 28.9681, "phone": "0212 555 5678", "website": "", "logoURL": "", "isActive": true }
+      ],
+      "oduller": [
+        { "id": "reward_001", "title": "%25 indirimli kahve", "description": "Tüm sıcak içeceklerde geçerli", "category": "drink", "type": "points", "requiredPoints": 2000, "promoRadius": 0, "businessId": "biz_001", "businessName": "Kahve Dünyası", "businessLogo": "", "photoURL": "", "latitude": 41.0120, "longitude": 28.9840, "isActive": true },
+        { "id": "reward_002", "title": "1 porsiyon ücretsiz köfte", "description": "Ana menüden 1 porsiyon köfte hediye", "category": "food", "type": "points", "requiredPoints": 5000, "promoRadius": 0, "businessId": "biz_002", "businessName": "Tarihi Sultanahmet Köftecisi", "businessLogo": "", "photoURL": "", "latitude": 41.0070, "longitude": 28.9760, "isActive": true },
+        { "id": "reward_003", "title": "%30 indirim", "description": "Tüm hediyelik eşyalarda geçerli", "category": "shopping", "type": "points", "requiredPoints": 3000, "promoRadius": 0, "businessId": "biz_003", "businessName": "Grand Bazaar Hediyelik", "businessLogo": "", "photoURL": "", "latitude": 41.0107, "longitude": 28.9681, "isActive": true }
+      ]
+    }
+  ]
+}

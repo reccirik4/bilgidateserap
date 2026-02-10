@@ -1,8 +1,8 @@
 // ============================================================
 // GITHUB-STORAGE.JS
 // Museum Quest — GitHub'dan statik JSON verileri okuma/yazma
-// v2.0 — Modüler şehir bazlı lazy loading
-// Bağımlılıklar: github-parametreleri.js (kullaniciAdi, repoAdi, token, GITHUB_DOSYALARI)
+// v3.0 — Tek dosya yapısı (museum-quest-data.json)
+// Bağımlılıklar: github-parametreleri.js (kullaniciAdi, repoAdi, token, githubKlasor, GITHUB_DOSYALARI)
 //                ui.js (bildirimGoster)
 // ============================================================
 
@@ -12,12 +12,12 @@ window.soruHavuzu = {};
 window.odulListesi = [];
 window.isletmeListesi = [];
 
-// v2.0 — Modüler yapı değişkenleri
-window.sehirIndex = null;        // museum-quest-index.json içeriği
-window.mevcutSehir = null;       // Aktif şehir verisi { id, name, file, ... }
-window.mevcutSehirVeri = null;   // Aktif şehir JSON içeriği { cityId, locations, ... }
-window.yuklenenSorular = {};     // Lazy load edilmiş sorular cache: { locationId: [...] }
-window.isletmelerYuklendi = false; // İşletmeler yüklendi mi flag
+// v3.0 — Tek dosya yapısı değişkenleri
+window.questData = null;             // museum-quest-data.json tam içeriği
+window.mevcutSehir = null;           // Aktif şehir verisi { id, name, center, ... }
+window.mevcutSehirVeri = null;       // Aktif şehir objesi (questData.cities içinden referans)
+window.tumSehirVerileri = {};        // Şehir ID → şehir objesi map'i
+window.yuklenenSorular = {};         // Lazy load edilmiş sorular cache: { locationId: true }
 
 // SHA değerleri (güncelleme için gerekli)
 var githubShaKayitlari = {};
@@ -111,69 +111,70 @@ async function githubDosyaYaz(dosya, icerik, sha) {
 }
 
 // ══════════════════════════════════════════════
-// v2.0 — MODÜLER VERİ YÜKLEME SİSTEMİ
+// v3.0 — TEK DOSYA VERİ YÜKLEME SİSTEMİ
 // ══════════════════════════════════════════════
 
 // ──────────────────────────────────────────────
-// ANA BAŞLATMA: index.json oku → GPS ile şehir bul → şehir yükle
+// ANA BAŞLATMA: tek JSON oku → GPS ile şehir bul → verileri dağıt
 // ──────────────────────────────────────────────
 async function statikVerileriYukle() {
-    console.log("[github-storage.js] v2.0 — Tüm şehirler yükleniyor...");
+    console.log("[github-storage.js] v3.0 — Tek dosyadan veriler yükleniyor...");
 
     try {
-        // 1. Ana index dosyasını oku (1 API çağrısı)
-        var indexSonuc = await githubDosyaOku(GITHUB_DOSYALARI.index);
+        // 1. Ana veri dosyasını oku (TEK API çağrısı)
+        var dataSonuc = await githubDosyaOku(GITHUB_DOSYALARI.data);
 
-        if (indexSonuc.icerik) {
-            window.sehirIndex = indexSonuc.icerik;
-            console.log("[github-storage.js] Index yüklendi. Şehir sayısı:", window.sehirIndex.cities.length);
+        if (dataSonuc.icerik && dataSonuc.icerik.cities) {
+            window.questData = dataSonuc.icerik;
+            console.log("[github-storage.js] Veri yüklendi. Şehir sayısı:", window.questData.cities.length);
         } else {
-            console.warn("[github-storage.js] Index yüklenemedi, fallback kullanılacak.");
-            window.sehirIndex = ornekIndex();
+            console.warn("[github-storage.js] Veri yüklenemedi, fallback kullanılacak.");
+            window.questData = ornekData();
         }
 
-        // 2. GPS ile en yakın şehri bul (mevcutSehir referansı için — işletmeler vb.)
+        // 2. GPS ile en yakın şehri bul
         var secilenSehir = await enYakinSehriBul();
         window.mevcutSehir = secilenSehir;
         console.log("[github-storage.js] En yakın şehir:", secilenSehir.name, "(id:", secilenSehir.id + ")");
 
-        // 3. TÜM aktif şehirlerin verilerini yükle ve lokasyonları birleştir
+        // 3. TÜM aktif şehirlerin lokasyonlarını birleştir
         window.oyunLokasyonlari = [];
         window.tumSehirVerileri = {};
 
-        for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-            var sehir = window.sehirIndex.cities[i];
+        for (var i = 0; i < window.questData.cities.length; i++) {
+            var sehir = window.questData.cities[i];
             if (!sehir.isActive) continue;
 
-            try {
-                var sehirSonuc = await githubDosyaOku(sehir.file);
-                if (sehirSonuc.icerik && sehirSonuc.icerik.locations) {
-                    // Her lokasyona şehir bilgisi ekle (quiz'de lazım olabilir)
-                    for (var j = 0; j < sehirSonuc.icerik.locations.length; j++) {
-                        sehirSonuc.icerik.locations[j].cityId = sehir.id;
-                        sehirSonuc.icerik.locations[j].cityName = sehir.name;
-                    }
-                    window.oyunLokasyonlari = window.oyunLokasyonlari.concat(sehirSonuc.icerik.locations);
-                    window.tumSehirVerileri[sehir.id] = sehirSonuc.icerik;
-                    console.log("[github-storage.js] Şehir yüklendi:", sehir.name,
-                        "Lokasyon:", sehirSonuc.icerik.locations.length);
+            // Şehir verisini map'e kaydet
+            window.tumSehirVerileri[sehir.id] = sehir;
+
+            // Lokasyonlara şehir bilgisi ekle ve birleştir
+            if (sehir.locations && sehir.locations.length > 0) {
+                for (var j = 0; j < sehir.locations.length; j++) {
+                    sehir.locations[j].cityId = sehir.id;
+                    sehir.locations[j].cityName = sehir.name;
                 }
-            } catch (sehirHata) {
-                console.warn("[github-storage.js] Şehir yüklenemedi:", sehir.name, sehirHata);
+                window.oyunLokasyonlari = window.oyunLokasyonlari.concat(sehir.locations);
             }
+
+            console.log("[github-storage.js] Şehir yüklendi:", sehir.name,
+                "Lokasyon:", (sehir.locations ? sehir.locations.length : 0));
         }
 
-        // En yakın şehrin verisini mevcutSehirVeri olarak ayarla
+        // 4. En yakın şehrin verisini ayarla
         window.mevcutSehirVeri = window.tumSehirVerileri[secilenSehir.id] || null;
 
-        console.log("[github-storage.js] Tüm şehirler yüklendi. Toplam lokasyon:", window.oyunLokasyonlari.length);
+        // 5. En yakın şehrin işletme ve ödüllerini yükle
+        sehirIsletmeleriniAyarla(secilenSehir.id);
+
+        console.log("[github-storage.js] Tüm veriler yüklendi. Toplam lokasyon:", window.oyunLokasyonlari.length);
 
     } catch (error) {
         console.error("[github-storage.js] Statik veri yükleme genel hata:", error);
-        if (window.oyunLokasyonlari.length === 0) window.oyunLokasyonlari = ornekLokasyonlar();
-        if (Object.keys(window.soruHavuzu).length === 0) window.soruHavuzu = ornekSorular();
-        if (window.odulListesi.length === 0) window.odulListesi = ornekOduller();
-        if (window.isletmeListesi.length === 0) window.isletmeListesi = ornekIsletmeler();
+        window.questData = ornekData();
+        if (window.oyunLokasyonlari.length === 0) window.oyunLokasyonlari = ornekData().cities[0].locations || [];
+        if (window.odulListesi.length === 0) window.odulListesi = ornekData().cities[0].oduller || [];
+        if (window.isletmeListesi.length === 0) window.isletmeListesi = ornekData().cities[0].isletmeler || [];
     }
 }
 
@@ -182,9 +183,9 @@ async function statikVerileriYukle() {
 // ──────────────────────────────────────────────
 function enYakinSehriBul() {
     return new Promise(function(resolve) {
-        if (!window.sehirIndex || !window.sehirIndex.cities || window.sehirIndex.cities.length === 0) {
-            console.warn("[github-storage.js] Şehir index boş, varsayılan İstanbul.");
-            resolve({ id: "istanbul", name: "İstanbul", file: "city-istanbul.json", isletmelerFile: "city-istanbul-isletmeler.json", center: { lat: 41.0082, lng: 28.9784 }, zoom: 14, isActive: true });
+        if (!window.questData || !window.questData.cities || window.questData.cities.length === 0) {
+            console.warn("[github-storage.js] Şehir verisi boş, varsayılan İstanbul.");
+            resolve({ id: "istanbul", name: "İstanbul", center: { lat: 41.0082, lng: 28.9784 }, zoom: 14, isActive: true, locations: [], isletmeler: [], oduller: [] });
             return;
         }
 
@@ -199,8 +200,8 @@ function enYakinSehriBul() {
                     var enYakin = null;
                     var enKisaMesafe = Infinity;
 
-                    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-                        var sehir = window.sehirIndex.cities[i];
+                    for (var i = 0; i < window.questData.cities.length; i++) {
+                        var sehir = window.questData.cities[i];
                         if (!sehir.isActive) continue;
 
                         var mesafe = gpsUzaklik(lat, lng, sehir.center.lat, sehir.center.lng);
@@ -216,26 +217,25 @@ function enYakinSehriBul() {
                 },
                 function(hata) {
                     console.warn("[github-storage.js] GPS hatası, ilk aktif şehir seçiliyor:", hata.message);
-                    // GPS yoksa ilk aktif şehri seç
-                    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-                        if (window.sehirIndex.cities[i].isActive) {
-                            resolve(window.sehirIndex.cities[i]);
+                    for (var i = 0; i < window.questData.cities.length; i++) {
+                        if (window.questData.cities[i].isActive) {
+                            resolve(window.questData.cities[i]);
                             return;
                         }
                     }
-                    resolve(window.sehirIndex.cities[0]);
+                    resolve(window.questData.cities[0]);
                 },
                 { timeout: 5000, enableHighAccuracy: false }
             );
         } else {
             console.warn("[github-storage.js] Geolocation desteklenmiyor, ilk şehir seçiliyor.");
-            for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-                if (window.sehirIndex.cities[i].isActive) {
-                    resolve(window.sehirIndex.cities[i]);
+            for (var i = 0; i < window.questData.cities.length; i++) {
+                if (window.questData.cities[i].isActive) {
+                    resolve(window.questData.cities[i]);
                     return;
                 }
             }
-            resolve(window.sehirIndex.cities[0]);
+            resolve(window.questData.cities[0]);
         }
     });
 }
@@ -253,31 +253,28 @@ function gpsUzaklik(lat1, lon1, lat2, lon2) {
 }
 
 // ──────────────────────────────────────────────
-// ŞEHİR VERİSİ YÜKLE (city-xxx.json)
+// ŞEHİR İŞLETME/ÖDÜL AYARLA (bellekten, API çağrısı yok)
 // ──────────────────────────────────────────────
-async function sehirVerisiYukle(sehirBilgisi) {
-    console.log("[github-storage.js] Şehir verisi yükleniyor:", sehirBilgisi.file);
-
-    var sehirSonuc = await githubDosyaOku(sehirBilgisi.file);
-
-    if (sehirSonuc.icerik) {
-        window.mevcutSehirVeri = sehirSonuc.icerik;
-        window.oyunLokasyonlari = sehirSonuc.icerik.locations || [];
-        console.log("[github-storage.js] Şehir yüklendi:", sehirBilgisi.name,
-            "Lokasyon:", window.oyunLokasyonlari.length);
+function sehirIsletmeleriniAyarla(sehirId) {
+    var sehir = window.tumSehirVerileri[sehirId];
+    if (sehir) {
+        window.isletmeListesi = sehir.isletmeler || [];
+        window.odulListesi = sehir.oduller || [];
+        console.log("[github-storage.js] İşletmeler ayarlandı:", sehirId,
+            window.isletmeListesi.length, "işletme,",
+            window.odulListesi.length, "ödül");
     } else {
-        console.warn("[github-storage.js] Şehir verisi yüklenemedi, fallback kullanılacak.");
-        window.oyunLokasyonlari = ornekLokasyonlar();
+        console.warn("[github-storage.js] Şehir bulunamadı:", sehirId);
+        window.isletmeListesi = [];
+        window.odulListesi = [];
     }
+}
 
-    // Soru havuzunu temizle (yeni şehir = yeni sorular)
-    window.soruHavuzu = {};
-    window.yuklenenSorular = {};
-
-    // İşletmeleri temizle (yeni şehir = yeni işletmeler)
-    window.odulListesi = [];
-    window.isletmeListesi = [];
-    window.isletmelerYuklendi = false;
+// Eski API uyumluluğu — rewards.js bu fonksiyonu çağırıyor
+async function sehirIsletmeleriniYukle() {
+    if (!window.mevcutSehir) return false;
+    sehirIsletmeleriniAyarla(window.mevcutSehir.id);
+    return window.isletmeListesi.length > 0;
 }
 
 // ──────────────────────────────────────────────
@@ -286,15 +283,15 @@ async function sehirVerisiYukle(sehirBilgisi) {
 async function sehirDegistir(sehirId) {
     console.log("[github-storage.js] Şehir değiştiriliyor:", sehirId);
 
-    if (!window.sehirIndex || !window.sehirIndex.cities) {
+    if (!window.questData || !window.questData.cities) {
         bildirimGoster("Şehir bilgisi bulunamadı.", "hata");
         return false;
     }
 
     var yeniSehir = null;
-    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-        if (window.sehirIndex.cities[i].id === sehirId) {
-            yeniSehir = window.sehirIndex.cities[i];
+    for (var i = 0; i < window.questData.cities.length; i++) {
+        if (window.questData.cities[i].id === sehirId) {
+            yeniSehir = window.questData.cities[i];
             break;
         }
     }
@@ -305,7 +302,14 @@ async function sehirDegistir(sehirId) {
     }
 
     window.mevcutSehir = yeniSehir;
-    await sehirVerisiYukle(yeniSehir);
+    window.mevcutSehirVeri = yeniSehir;
+
+    // İşletme ve ödülleri ayarla
+    sehirIsletmeleriniAyarla(sehirId);
+
+    // Soru havuzunu temizle (yeni şehir = yeni sorular)
+    window.soruHavuzu = {};
+    window.yuklenenSorular = {};
 
     // Haritayı yeni şehre merkezle
     if (typeof harita !== 'undefined' && harita) {
@@ -315,7 +319,6 @@ async function sehirDegistir(sehirId) {
 
     // Marker'ları yeniden yükle
     if (typeof lokasyonlariHaritayaEkle === 'function') {
-        // Mevcut marker'ları temizle
         if (typeof lokasyonMarkerlar !== 'undefined') {
             Object.keys(lokasyonMarkerlar).forEach(function(key) {
                 if (lokasyonMarkerlar[key]) lokasyonMarkerlar[key].setMap(null);
@@ -354,7 +357,6 @@ async function lokasyonSorulariniYukle(locationId) {
 
     if (!questionsFile) {
         console.error("[github-storage.js] questionsFile bulunamadı:", locationId);
-        // Fallback sorulara bak
         var fallback = ornekSorular();
         if (fallback[locationId]) {
             window.soruHavuzu[locationId] = fallback[locationId];
@@ -374,7 +376,6 @@ async function lokasyonSorulariniYukle(locationId) {
         return soruSonuc.icerik;
     } else {
         console.warn("[github-storage.js] Sorular yüklenemedi:", questionsFile, "Fallback deneniyor...");
-        // Fallback
         var fallback = ornekSorular();
         if (fallback[locationId]) {
             window.soruHavuzu[locationId] = fallback[locationId];
@@ -384,130 +385,36 @@ async function lokasyonSorulariniYukle(locationId) {
     }
 }
 
-// ──────────────────────────────────────────────
-// ŞEHİR İŞLETMELERİNİ LAZY LOAD ET
-// Ödül ekranı açılınca çağrılır
-// ──────────────────────────────────────────────
-async function sehirIsletmeleriniYukle() {
-    // Zaten yüklendiyse tekrar yükleme
-    if (window.isletmelerYuklendi && window.isletmeListesi.length > 0) {
-        console.log("[github-storage.js] İşletmeler zaten yüklü.");
-        return true;
-    }
-
-    if (!window.mevcutSehir || !window.mevcutSehir.isletmelerFile) {
-        console.warn("[github-storage.js] İşletme dosyası bilgisi yok.");
-        window.isletmeListesi = ornekIsletmeler();
-        window.odulListesi = ornekOduller();
-        return false;
-    }
-
-    console.log("[github-storage.js] İşletmeler lazy load ediliyor:", window.mevcutSehir.isletmelerFile);
-
-    var sonuc = await githubDosyaOku(window.mevcutSehir.isletmelerFile);
-
-    if (sonuc.icerik) {
-        window.isletmeListesi = sonuc.icerik.isletmeler || [];
-        window.odulListesi = sonuc.icerik.oduller || [];
-        window.isletmelerYuklendi = true;
-        console.log("[github-storage.js] İşletmeler yüklendi:",
-            window.isletmeListesi.length, "işletme,",
-            window.odulListesi.length, "ödül");
-        return true;
-    } else {
-        console.warn("[github-storage.js] İşletmeler yüklenemedi, fallback kullanılacak.");
-        window.isletmeListesi = ornekIsletmeler();
-        window.odulListesi = ornekOduller();
-        return false;
-    }
-}
-
 // ══════════════════════════════════════════════
 // FALLBACK ÖRNEK VERİLER
 // ══════════════════════════════════════════════
 
-function ornekIndex() {
+function ornekData() {
     return {
-        version: "2.0",
+        version: "3.0",
         cities: [
-            { id: "istanbul", name: "İstanbul", file: "city-istanbul.json", isletmelerFile: "city-istanbul-isletmeler.json", locationCount: 5, center: { lat: 41.0082, lng: 28.9784 }, zoom: 14, isActive: true }
+            {
+                id: "istanbul",
+                name: "İstanbul",
+                center: { lat: 41.0082, lng: 28.9784 },
+                zoom: 14,
+                isActive: true,
+                locations: [
+                    { id: "loc_001", name: "Topkapı Sarayı", description: "Osmanlı İmparatorluğu'nun 400 yıllık idare merkezi", questionsFile: "questions-loc_001.json", photoURL: "", latitude: 41.0115, longitude: 28.9833, difficulty: "medium", questionCount: 10, entryRadius: 1000, exitRadius: 2000, isActive: true, category: "history" },
+                    { id: "loc_002", name: "Ayasofya", description: "537 yılında inşa edilen mimari şaheser", questionsFile: "questions-loc_002.json", photoURL: "", latitude: 41.0086, longitude: 28.9802, difficulty: "hard", questionCount: 2, entryRadius: 1000, exitRadius: 2000, isActive: true, category: "history" },
+                    { id: "loc_003", name: "İstanbul Arkeoloji Müzeleri", description: "Üç müzeden oluşan dünyanın en büyük müze komplekslerinden biri", questionsFile: "questions-loc_003.json", photoURL: "", latitude: 41.0117, longitude: 28.9814, difficulty: "easy", questionCount: 1, entryRadius: 1000, exitRadius: 2000, isActive: true, category: "history" },
+                    { id: "loc_004", name: "Basilika Sarnıcı", description: "532 yılında inşa edilen yeraltı su deposu", questionsFile: "questions-loc_004.json", photoURL: "", latitude: 41.0084, longitude: 28.9779, difficulty: "medium", questionCount: 1, entryRadius: 1000, exitRadius: 2000, isActive: true, category: "history" },
+                    { id: "loc_005", name: "Türk ve İslam Eserleri Müzesi", description: "İbrahim Paşa Sarayı'nda konumlanan zengin koleksiyon", questionsFile: "questions-loc_005.json", photoURL: "", latitude: 41.0063, longitude: 28.9753, difficulty: "medium", questionCount: 1, entryRadius: 1000, exitRadius: 2000, isActive: true, category: "history" }
+                ],
+                isletmeler: [
+                    { id: "biz_001", name: "Kahve Dünyası", description: "Sultanahmet'te popüler Türk kahve zinciri.", address: "Sultanahmet Mah. No:12", latitude: 41.0120, longitude: 28.9840, phone: "0212 555 1234", website: "", logoURL: "", isActive: true }
+                ],
+                oduller: [
+                    { id: "reward_001", title: "%25 indirimli kahve", description: "Tüm sıcak içeceklerde geçerli", category: "drink", type: "points", requiredPoints: 2000, promoRadius: 0, businessId: "biz_001", businessName: "Kahve Dünyası", businessLogo: "", photoURL: "", latitude: 41.0120, longitude: 28.9840, isActive: true }
+                ]
+            }
         ]
     };
-}
-
-function ornekLokasyonlar() {
-    return [
-        {
-            id: "loc_001",
-            name: "Topkapı Sarayı",
-            description: "Osmanlı İmparatorluğu'nun 400 yıllık idare merkezi",
-            questionsFile: "questions-loc_001.json",
-            photoURL: "",
-            latitude: 41.0115,
-            longitude: 28.9833,
-            difficulty: "medium",
-            questionCount: 10,
-            entryRadius: 1000,
-            exitRadius: 2000,
-            isActive: true
-        },
-        {
-            id: "loc_002",
-            name: "Ayasofya",
-            description: "537 yılında inşa edilen mimari şaheser",
-            questionsFile: "questions-loc_002.json",
-            photoURL: "",
-            latitude: 41.0086,
-            longitude: 28.9802,
-            difficulty: "hard",
-            questionCount: 2,
-            entryRadius: 1000,
-            exitRadius: 2000,
-            isActive: true
-        },
-        {
-            id: "loc_003",
-            name: "İstanbul Arkeoloji Müzeleri",
-            description: "Üç müzeden oluşan dünyanın en büyük müze komplekslerinden biri",
-            questionsFile: "questions-loc_003.json",
-            photoURL: "",
-            latitude: 41.0117,
-            longitude: 28.9814,
-            difficulty: "easy",
-            questionCount: 1,
-            entryRadius: 1000,
-            exitRadius: 2000,
-            isActive: true
-        },
-        {
-            id: "loc_004",
-            name: "Basilika Sarnıcı",
-            description: "532 yılında inşa edilen yeraltı su deposu",
-            questionsFile: "questions-loc_004.json",
-            photoURL: "",
-            latitude: 41.0084,
-            longitude: 28.9779,
-            difficulty: "medium",
-            questionCount: 1,
-            entryRadius: 1000,
-            exitRadius: 2000,
-            isActive: true
-        },
-        {
-            id: "loc_005",
-            name: "Türk ve İslam Eserleri Müzesi",
-            description: "İbrahim Paşa Sarayı'nda konumlanan zengin koleksiyon",
-            questionsFile: "questions-loc_005.json",
-            photoURL: "",
-            latitude: 41.0063,
-            longitude: 28.9753,
-            difficulty: "medium",
-            questionCount: 1,
-            entryRadius: 1000,
-            exitRadius: 2000,
-            isActive: true
-        }
-    ];
 }
 
 function ornekSorular() {
@@ -531,16 +438,4 @@ function ornekSorular() {
     };
 }
 
-function ornekOduller() {
-    return [
-        { id: "reward_001", businessId: "biz_001", businessName: "Kahve Dünyası", businessLogo: "", title: "%25 indirimli kahve", description: "Tüm sıcak içeceklerde geçerli", photoURL: "", requiredPoints: 2000, category: "drink", latitude: 41.0120, longitude: 28.9840, stock: 50, validUntil: "2026-12-31", isActive: true }
-    ];
-}
-
-function ornekIsletmeler() {
-    return [
-        { id: "biz_001", name: "Kahve Dünyası", logo: "", address: "Sultanahmet Mah. No:12", latitude: 41.0120, longitude: 28.9840, contactEmail: "info@kahvedunyasi.com", contactPhone: "0212 555 1234" }
-    ];
-}
-
-console.log("[github-storage.js] GitHub storage modülü yüklendi. (v2.0 — Modüler)");
+console.log("[github-storage.js] GitHub storage modülü yüklendi. (v3.0 — Tek Dosya)");

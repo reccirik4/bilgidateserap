@@ -1,7 +1,7 @@
 // ============================================================
 // REWARDS.JS
 // Museum Quest — Ödül listesi, QR kupon, navigasyon, işletme onayı
-// v3.0 — Tek dosya yapısı (işletmeler/ödüller başlangıçta yüklü)
+// v2.0 — Lazy loading işletme/ödül desteği
 // Bağımlılıklar: auth.js (mevcutKullanici, kullaniciBilgileri)
 //                database.js (oduluKullan, kuponlarimOku, kuponGuncelle, puanDus, kullaniciProfilGuncelle)
 //                github-storage.js (window.odulListesi, window.isletmeListesi, sehirIsletmeleriniYukle)
@@ -24,13 +24,19 @@ var bildirilenPuanOduller = {};        // session boyunca bildirilen puan ödül
 var proximityPopupAcik = false;        // aynı anda birden fazla popup önleme
 
 // ──────────────────────────────────────────────
-// ÖDÜLLERİ GÖSTER (v3.0 — veriler zaten bellekte)
+// ÖDÜLLERİ GÖSTER (v2.0 — async + lazy load)
 // ──────────────────────────────────────────────
 async function odulleriGoster() {
     console.log("[rewards.js] Ödüller gösteriliyor. Filtre:", aktifOdulFiltre);
 
     var container = document.getElementById('odul-listesi-container');
     if (!container) return;
+
+    // v2.0 — İşletmeler/ödüller henüz yüklenmemişse lazy load et
+    if (!window.isletmelerYuklendi) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:32px 0;">⏳ Ödüller yükleniyor...</p>';
+        await sehirIsletmeleriniYukle();
+    }
 
     var oduller = window.odulListesi || [];
 
@@ -94,28 +100,32 @@ async function odulleriGoster() {
         // Logo
         var logo = odul.businessLogo || odul.photoURL || '';
         var logoHTML = logo
-            ? '<img src="' + logo + '" class="odul-logo" alt="logo" onerror="this.style.display=\'none\'">'
-            : '<div class="odul-logo-placeholder">' + kategoriEmoji + '</div>';
+            ? '<img class="odul-kart-logo" src="' + htmlEscape(logo) + '" alt="' + htmlEscape(odul.businessName) + '" onerror="this.style.display=\'none\'">'
+            : '<div class="odul-kart-logo" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:var(--bg-primary);">' + kategoriEmoji + '</div>';
 
-        // Puan/Free badge
+        // Puan veya bedava badge
         var puanHTML = '';
         if (odulTipi === 'free') {
-            puanHTML = '<span class="badge badge-green">🆓 Bedava</span>';
             if (proximityYakin) {
-                puanHTML += ' <span class="badge badge-gold">📍 Yakında!</span>';
+                puanHTML = '<span class="badge badge-green">🎉 Bedava — Yakınında!</span>';
+            } else {
+                puanHTML = '<span class="badge badge-gold">🆓 Bedava</span>';
             }
         } else {
-            puanHTML = '<span class="odul-puan" style="color:' + puanRenk + ';font-weight:700;">⭐ ' + formatPuan(odul.requiredPoints) + '</span>';
+            puanHTML = '<span class="odul-puan" style="color:' + puanRenk + '">⭐ ' + formatPuan(odul.requiredPoints) + '</span>';
         }
 
         // Buton
         var butonHTML = '';
         if (odulTipi === 'free') {
-            butonHTML = '<button class="btn btn-sm ' + (proximityYakin ? 'btn-green' : 'btn-outline') + '" onclick="oduluAlOnay(\'' + odul.id + '\')" ' + (!proximityYakin ? 'disabled title="Yakına gelmelisin"' : '') + '>' +
-                (proximityYakin ? '🎁 Al' : '📍 Yakına Gel') +
-                '</button>';
+            if (proximityYakin) {
+                butonHTML = '<button class="btn btn-green btn-sm" onclick="oduluAlOnay(\'' + odul.id + '\')">🎁 Hemen Al</button>';
+            } else {
+                butonHTML = '<button class="btn btn-sm btn-outline" disabled>📍 Yaklaş (' + formatMesafe(odul.promoRadius || 500) + ')</button>';
+            }
         } else {
-            butonHTML = '<button class="btn btn-sm ' + (yeterliMi ? 'btn-gold' : 'btn-outline') + '" onclick="oduluAlOnay(\'' + odul.id + '\')" ' + (!yeterliMi ? 'disabled' : '') + '>' +
+            butonHTML = '<button class="btn btn-gold btn-sm" onclick="oduluAlOnay(\'' + odul.id + '\')" ' +
+                (yeterliMi ? '' : 'disabled') + '>' +
                 (yeterliMi ? '🎁 Al' : '🔒 Yetersiz') +
                 '</button>';
         }
@@ -378,177 +388,6 @@ function kuponIsletmeyeGit() {
     }
 }
 
-// Kupon detay (kuponlarım listesinden)
-function kuponDetayGoster(kuponKey) {
-    kuponlarimOku(mevcutKullanici.uid).then(function(kuponlar) {
-        if (!kuponlar || !kuponlar[kuponKey]) {
-            bildirimGoster("Kupon bulunamadı.", "hata");
-            return;
-        }
-
-        var k = kuponlar[kuponKey];
-
-        // Ödül bilgilerini bul
-        var odul = odulBul(k.rewardId) || {
-            title: k.rewardTitle,
-            businessName: k.businessName,
-            description: k.description || '',
-            latitude: k.latitude,
-            longitude: k.longitude
-        };
-
-        qrKuponGoster(k.qrCode, odul);
-    });
-}
-
-// ──────────────────────────────────────────────
-// PROXIMITY ÖDÜL KONTROLÜ (map.js konumGuncelle'den çağrılır)
-// v3.0 — İşletmeler/ödüller başlangıçta yüklü, extra fetch yok
-// ──────────────────────────────────────────────
-function proximityOdulKontrol() {
-    // Konum yoksa çık
-    if (!mevcutKonum.lat || !mevcutKonum.lng) return;
-    // Kullanıcı giriş yapmamışsa çık
-    if (!mevcutKullanici || !kullaniciBilgileri) return;
-    // Popup zaten açıksa çık
-    if (proximityPopupAcik) return;
-
-    proximityOdulKontrolIslemi();
-}
-
-// Proximity kontrol asıl işlemi
-function proximityOdulKontrolIslemi() {
-    if (!mevcutKonum.lat || !mevcutKonum.lng) return;
-    if (!mevcutKullanici || !kullaniciBilgileri) return;
-    if (proximityPopupAcik) return;
-
-    var oduller = window.odulListesi || [];
-
-    for (var i = 0; i < oduller.length; i++) {
-        var odul = oduller[i];
-
-        // Sadece aktif free ödülleri kontrol et
-        if (!odul.isActive) continue;
-        if ((odul.type || 'points') !== 'free') continue;
-
-        // Bu session'da zaten gösterildi mi
-        if (gosterilenProximityOduller[odul.id]) continue;
-
-        var promoR = odul.promoRadius || 500;
-        var mesafe = mesafeHesapla(mevcutKonum.lat, mevcutKonum.lng, odul.latitude, odul.longitude);
-
-        if (mesafe <= promoR) {
-            // Gösterildi olarak işaretle
-            gosterilenProximityOduller[odul.id] = true;
-            // Popup göster
-            proximityOdulPopupGoster(odul, mesafe);
-            break; // Tek seferde bir popup
-        }
-    }
-}
-
-function proximityOdulPopupGoster(odul, mesafe) {
-    console.log("[rewards.js] Proximity ödül popup:", odul.title, mesafe.toFixed(0) + "m");
-    proximityPopupAcik = true;
-
-    var kategoriEmoji = kategoriEmojiAl(odul.category);
-    var mesafeMetin = formatMesafe(mesafe);
-
-    var html = '<div style="text-align:center;">' +
-        '<div style="font-size:3rem;margin-bottom:12px;">🎉</div>' +
-        '<div style="font-size:1.25rem;font-weight:700;margin-bottom:4px;">Bedava Ödül Yakınında!</div>' +
-        '<div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:16px;">Bir işletme sana hediye sunuyor</div>' +
-        '<div class="card" style="text-align:left;margin-bottom:16px;border-color:var(--gold);">' +
-            '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + kategoriEmoji + ' ' + htmlEscape(odul.title) + '</div>' +
-            '<div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">' + htmlEscape(odul.businessName) + '</div>' +
-            '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">' + htmlEscape(odul.description || '') + '</div>' +
-            '<div style="display:flex;gap:12px;align-items:center;">' +
-                '<span class="badge badge-green">🆓 Bedava</span>' +
-                '<span style="font-size:0.8rem;color:var(--orange);">📍 ' + mesafeMetin + '</span>' +
-            '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:12px;">' +
-            '<button class="btn btn-outline" style="flex:1;" onclick="proximityPopupKapat()">Sonra</button>' +
-            '<button class="btn btn-green" style="flex:1;" onclick="proximityPopupKapat();oduluAlOnay(\'' + odul.id + '\')">🎁 Hemen Al</button>' +
-        '</div>' +
-    '</div>';
-
-    modalGoster(html);
-}
-
-function proximityPopupKapat() {
-    proximityPopupAcik = false;
-    if (typeof modalKapat === 'function') {
-        modalKapat();
-    }
-}
-
-// ──────────────────────────────────────────────
-// PUAN EŞİĞİ BİLDİRİMİ (database.js puanEkle'den çağrılır)
-// ──────────────────────────────────────────────
-function puanEsigiOdulKontrol(eskiPuan, yeniPuan) {
-    // Kullanıcı giriş yapmamışsa çık
-    if (!mevcutKullanici || !kullaniciBilgileri) return;
-    // Popup açıksa çık
-    if (proximityPopupAcik) return;
-
-    var oduller = window.odulListesi || [];
-
-    for (var i = 0; i < oduller.length; i++) {
-        var odul = oduller[i];
-
-        // Sadece aktif points ödüllerini kontrol et
-        if (!odul.isActive) continue;
-        if ((odul.type || 'points') !== 'points') continue;
-        if (!odul.requiredPoints || odul.requiredPoints <= 0) continue;
-
-        // Bu session'da zaten bildirildi mi
-        if (bildirilenPuanOduller[odul.id]) continue;
-
-        // Eski puan yetersiz VE yeni puan yeterli ise → bildir
-        if (eskiPuan < odul.requiredPoints && yeniPuan >= odul.requiredPoints) {
-            bildirilenPuanOduller[odul.id] = true;
-            puanEsigiPopupGoster(odul);
-            break; // Tek seferde bir popup
-        }
-    }
-}
-
-function puanEsigiPopupGoster(odul) {
-    console.log("[rewards.js] Puan eşiği popup:", odul.title);
-    proximityPopupAcik = true;
-
-    var kategoriEmoji = kategoriEmojiAl(odul.category);
-
-    // Mesafe
-    var mesafeMetin = '';
-    if (mevcutKonum.lat && mevcutKonum.lng) {
-        var m = mesafeHesapla(mevcutKonum.lat, mevcutKonum.lng, odul.latitude, odul.longitude);
-        mesafeMetin = formatMesafe(m);
-    }
-
-    var html = '<div style="text-align:center;">' +
-        '<div style="font-size:3rem;margin-bottom:12px;">⭐</div>' +
-        '<div style="font-size:1.25rem;font-weight:700;margin-bottom:4px;">Yeni Ödül Açıldı!</div>' +
-        '<div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:16px;">Puanın yeni bir ödülü almaya yeter</div>' +
-        '<div class="card" style="text-align:left;margin-bottom:16px;border-color:var(--gold);">' +
-            '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + kategoriEmoji + ' ' + htmlEscape(odul.title) + '</div>' +
-            '<div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">' + htmlEscape(odul.businessName) + '</div>' +
-            '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">' + htmlEscape(odul.description || '') + '</div>' +
-            '<div style="display:flex;gap:12px;align-items:center;">' +
-                '<span class="odul-puan" style="color:var(--gold);font-size:0.85rem;font-weight:700;">⭐ ' + formatPuan(odul.requiredPoints) + '</span>' +
-                (mesafeMetin ? '<span style="font-size:0.8rem;color:var(--orange);">📍 ' + mesafeMetin + '</span>' : '') +
-            '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:12px;">' +
-            '<button class="btn btn-outline" style="flex:1;" onclick="proximityPopupKapat()">Sonra</button>' +
-            '<button class="btn btn-gold" style="flex:1;" onclick="proximityPopupKapat();oduluAlOnay(\'' + odul.id + '\')">🎁 Hemen Al</button>' +
-        '</div>' +
-    '</div>';
-
-    modalGoster(html);
-}
-
 // ──────────────────────────────────────────────
 // ÖDÜLÜ ONAYLA (İŞLETME TARAFI)
 // ──────────────────────────────────────────────
@@ -637,26 +476,38 @@ async function kuponlarimGoster() {
             durumRenk = 'var(--green)';
         } else if (durum === 'expired') {
             durumMetin = '⏰ Süresi Doldu';
-            durumRenk = 'var(--text-muted)';
+            durumRenk = 'var(--red)';
         } else {
             durumMetin = '⏳ Onay Bekliyor';
             durumRenk = 'var(--orange)';
         }
 
-        var tarih = k.createdAt ? formatTarih(k.createdAt) : '';
+        // Tip badge
+        var tipBadge = '';
+        if (k.rewardType === 'free') {
+            tipBadge = '<span class="badge badge-green" style="font-size:0.65rem;padding:2px 6px;">🆓 Bedava</span> ';
+        }
 
-        html += '<div class="card" style="cursor:pointer;border-left:3px solid ' + durumRenk + ';" onclick="kuponDetayGoster(\'' + k._key + '\')">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        html += '<div class="card" style="padding:12px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;">' +
                 '<div>' +
-                    '<div style="font-weight:700;font-size:0.9rem;">' + htmlEscape(k.rewardTitle) + '</div>' +
-                    '<div style="font-size:0.8rem;color:var(--text-dim);">' + htmlEscape(k.businessName) + '</div>' +
+                    '<div style="font-weight:600;font-size:0.9375rem;">' + tipBadge + htmlEscape(k.rewardTitle || '') + '</div>' +
+                    '<div style="font-size:0.8rem;color:var(--text-dim);">' + htmlEscape(k.businessName || '') + '</div>' +
                 '</div>' +
-                '<div style="text-align:right;">' +
-                    '<div style="font-size:0.75rem;color:' + durumRenk + ';font-weight:600;">' + durumMetin + '</div>' +
-                    '<div style="font-size:0.7rem;color:var(--text-muted);">' + tarih + '</div>' +
-                '</div>' +
+                '<span style="font-size:0.75rem;font-weight:600;color:' + durumRenk + ';">' + durumMetin + '</span>' +
             '</div>' +
-        '</div>';
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">' +
+                '<span style="font-size:0.75rem;color:var(--text-muted);">' + formatTarih(k.createdAt) + '</span>' +
+                '<span style="font-size:0.75rem;color:var(--gold);letter-spacing:1px;font-weight:600;">' + htmlEscape(k.qrCode || '') + '</span>' +
+            '</div>';
+
+        // Bekleyen kupon ise QR göster butonu ekle
+        if (durum === 'pending') {
+            html += '<button class="btn btn-gold btn-sm btn-block" style="margin-top:8px;" ' +
+                'onclick="modalKapat();kuponDetayGoster(\'' + htmlEscape(k._key) + '\')">📱 QR Göster</button>';
+        }
+
+        html += '</div>';
     }
 
     html += '</div>';
@@ -665,4 +516,189 @@ async function kuponlarimGoster() {
     modalGoster(html);
 }
 
-console.log("[rewards.js] Rewards modülü yüklendi. (v3.0 — Tek Dosya)");
+// Kupon detay — QR tekrar göster
+async function kuponDetayGoster(kuponKey) {
+    if (!mevcutKullanici) return;
+
+    var kuponlar = await kuponlarimOku(mevcutKullanici.uid);
+    if (!kuponlar || !kuponlar[kuponKey]) {
+        bildirimGoster("Kupon bulunamadı.", "hata");
+        return;
+    }
+
+    var k = kuponlar[kuponKey];
+
+    // Ödül bilgilerini bul
+    var odul = odulBul(k.rewardId) || {
+        title: k.rewardTitle,
+        businessName: k.businessName,
+        description: k.description || '',
+        latitude: k.latitude,
+        longitude: k.longitude
+    };
+
+    qrKuponGoster(k.qrCode, odul);
+}
+
+// ──────────────────────────────────────────────
+// PROXIMITY ÖDÜL KONTROLÜ (map.js konumGuncelle'den çağrılır)
+// v2.0 — İşletmeler yüklenmemişse async lazy load tetikle
+// ──────────────────────────────────────────────
+function proximityOdulKontrol() {
+    // Konum yoksa çık
+    if (!mevcutKonum.lat || !mevcutKonum.lng) return;
+    // Kullanıcı giriş yapmamışsa çık
+    if (!mevcutKullanici || !kullaniciBilgileri) return;
+    // Popup zaten açıksa çık
+    if (proximityPopupAcik) return;
+
+    // v2.0 — İşletmeler henüz yüklenmemişse arka planda yükle
+    if (!window.isletmelerYuklendi) {
+        sehirIsletmeleriniYukle().then(function() {
+            // Yüklendikten sonra tekrar kontrol et
+            proximityOdulKontrolIslemi();
+        });
+        return;
+    }
+
+    proximityOdulKontrolIslemi();
+}
+
+// Proximity kontrol asıl işlemi (ayrılmış — async sonrası da çağrılabilir)
+function proximityOdulKontrolIslemi() {
+    if (!mevcutKonum.lat || !mevcutKonum.lng) return;
+    if (!mevcutKullanici || !kullaniciBilgileri) return;
+    if (proximityPopupAcik) return;
+
+    var oduller = window.odulListesi || [];
+
+    for (var i = 0; i < oduller.length; i++) {
+        var odul = oduller[i];
+
+        // Sadece aktif free ödülleri kontrol et
+        if (!odul.isActive) continue;
+        if ((odul.type || 'points') !== 'free') continue;
+
+        // Bu session'da zaten gösterildi mi
+        if (gosterilenProximityOduller[odul.id]) continue;
+
+        var promoR = odul.promoRadius || 500;
+        var mesafe = mesafeHesapla(mevcutKonum.lat, mevcutKonum.lng, odul.latitude, odul.longitude);
+
+        if (mesafe <= promoR) {
+            // Gösterildi olarak işaretle
+            gosterilenProximityOduller[odul.id] = true;
+            // Popup göster
+            proximityOdulPopupGoster(odul, mesafe);
+            break; // Tek seferde bir popup
+        }
+    }
+}
+
+function proximityOdulPopupGoster(odul, mesafe) {
+    console.log("[rewards.js] Proximity ödül popup:", odul.title, mesafe.toFixed(0) + "m");
+    proximityPopupAcik = true;
+
+    var kategoriEmoji = kategoriEmojiAl(odul.category);
+    var mesafeMetin = formatMesafe(mesafe);
+
+    var html = '<div style="text-align:center;">' +
+        '<div style="font-size:3rem;margin-bottom:12px;">🎉</div>' +
+        '<div style="font-size:1.25rem;font-weight:700;margin-bottom:4px;">Bedava Ödül Yakınında!</div>' +
+        '<div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:16px;">Bir işletme sana hediye sunuyor</div>' +
+        '<div class="card" style="text-align:left;margin-bottom:16px;border-color:var(--gold);">' +
+            '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + kategoriEmoji + ' ' + htmlEscape(odul.title) + '</div>' +
+            '<div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">' + htmlEscape(odul.businessName) + '</div>' +
+            '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">' + htmlEscape(odul.description || '') + '</div>' +
+            '<div style="display:flex;gap:12px;align-items:center;">' +
+                '<span class="badge badge-green">🆓 Bedava</span>' +
+                '<span style="font-size:0.8rem;color:var(--orange);">📍 ' + mesafeMetin + '</span>' +
+            '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:12px;">' +
+            '<button class="btn btn-outline" style="flex:1;" onclick="proximityPopupKapat()">Sonra</button>' +
+            '<button class="btn btn-green" style="flex:1;" onclick="proximityPopupKapat();oduluAlOnay(\'' + odul.id + '\')">🎁 Hemen Al</button>' +
+        '</div>' +
+    '</div>';
+
+    modalGoster(html);
+}
+
+function proximityPopupKapat() {
+    proximityPopupAcik = false;
+    if (typeof modalKapat === 'function') {
+        modalKapat();
+    }
+}
+
+// ──────────────────────────────────────────────
+// PUAN EŞİĞİ BİLDİRİMİ (database.js puanEkle'den çağrılır)
+// ──────────────────────────────────────────────
+function puanEsigiOdulKontrol(eskiPuan, yeniPuan) {
+    // Kullanıcı giriş yapmamışsa çık
+    if (!mevcutKullanici || !kullaniciBilgileri) return;
+    // Popup açıksa çık
+    if (proximityPopupAcik) return;
+
+    // v2.0 — İşletmeler yüklenmemişse bu kontrolü atla
+    // (Ödüller zaten yüklenmeden puan eşiği kontrolü anlamsız)
+    if (!window.isletmelerYuklendi) return;
+
+    var oduller = window.odulListesi || [];
+
+    for (var i = 0; i < oduller.length; i++) {
+        var odul = oduller[i];
+
+        // Sadece aktif points ödüllerini kontrol et
+        if (!odul.isActive) continue;
+        if ((odul.type || 'points') !== 'points') continue;
+        if (!odul.requiredPoints || odul.requiredPoints <= 0) continue;
+
+        // Bu session'da zaten bildirildi mi
+        if (bildirilenPuanOduller[odul.id]) continue;
+
+        // Eski puan yetersiz VE yeni puan yeterli ise → bildir
+        if (eskiPuan < odul.requiredPoints && yeniPuan >= odul.requiredPoints) {
+            bildirilenPuanOduller[odul.id] = true;
+            puanEsigiPopupGoster(odul);
+            break; // Tek seferde bir popup
+        }
+    }
+}
+
+function puanEsigiPopupGoster(odul) {
+    console.log("[rewards.js] Puan eşiği popup:", odul.title);
+    proximityPopupAcik = true;
+
+    var kategoriEmoji = kategoriEmojiAl(odul.category);
+
+    // Mesafe
+    var mesafeMetin = '';
+    if (mevcutKonum.lat && mevcutKonum.lng) {
+        var m = mesafeHesapla(mevcutKonum.lat, mevcutKonum.lng, odul.latitude, odul.longitude);
+        mesafeMetin = formatMesafe(m);
+    }
+
+    var html = '<div style="text-align:center;">' +
+        '<div style="font-size:3rem;margin-bottom:12px;">⭐</div>' +
+        '<div style="font-size:1.25rem;font-weight:700;margin-bottom:4px;">Yeni Ödül Açıldı!</div>' +
+        '<div style="font-size:0.875rem;color:var(--text-dim);margin-bottom:16px;">Puanın yeni bir ödülü almaya yeter</div>' +
+        '<div class="card" style="text-align:left;margin-bottom:16px;border-color:var(--gold);">' +
+            '<div style="font-weight:700;font-size:1rem;margin-bottom:4px;">' + kategoriEmoji + ' ' + htmlEscape(odul.title) + '</div>' +
+            '<div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;">' + htmlEscape(odul.businessName) + '</div>' +
+            '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">' + htmlEscape(odul.description || '') + '</div>' +
+            '<div style="display:flex;gap:12px;align-items:center;">' +
+                '<span class="odul-puan" style="color:var(--gold);font-size:0.85rem;font-weight:700;">⭐ ' + formatPuan(odul.requiredPoints) + '</span>' +
+                (mesafeMetin ? '<span style="font-size:0.8rem;color:var(--orange);">📍 ' + mesafeMetin + '</span>' : '') +
+            '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:12px;">' +
+            '<button class="btn btn-outline" style="flex:1;" onclick="proximityPopupKapat()">Sonra</button>' +
+            '<button class="btn btn-gold" style="flex:1;" onclick="proximityPopupKapat();oduluAlOnay(\'' + odul.id + '\')">🎁 Hemen Al</button>' +
+        '</div>' +
+    '</div>';
+
+    modalGoster(html);
+}
+
+console.log("[rewards.js] Rewards modülü yüklendi. (v2.0 — Lazy Loading)");
