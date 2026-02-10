@@ -1,6 +1,6 @@
 // ============================================================
 // MULTIPLAYER.JS
-// Museum Quest — Birlikte oyna: davet, eşleşme, sohbet, TKM, 3x quiz
+// Museum Quest — Birlikte oyna: davet, eşleşme, sohbet, TKM, 2x quiz
 // Bağımlılıklar: auth.js (mevcutKullanici, kullaniciBilgileri)
 //                database.js (aktifOyuncuEkle/Sil, aktifOyunculariDinle, eslesmeOlustur/Guncelle/Dinle,
 //                             chatMesajGonder/Dinle, gelenDavetleriDinle, dbOku)
@@ -21,7 +21,6 @@ var birlikteQuizMesafeInterval = null;
 var mevcutBirlikteLokayon = null;   // Birlikte oynanan lokasyon ID
 var bekleyenDavetKey = null;        // Bekleyen gelen davet key'i
 var pairingOpenDurum = false;       // Görünürlük durumu
-var birlikteOynaPopupGosterildi = false; // Session başına 1 kere popup
 
 // ──────────────────────────────────────────────
 // ADIM 1 — BİRLİKTE OYNA TOGGLE (GÖRÜNÜR OL)
@@ -32,7 +31,10 @@ function birlikteOynaToggle() {
         return;
     }
 
-    // mevcutMekanId yoksa devam et (floating buton her yerde çalışır)
+    if (!mevcutMekanId) {
+        bildirimGoster("Önce bir mekan seç.", "uyari");
+        return;
+    }
 
     pairingOpenDurum = !pairingOpenDurum;
 
@@ -65,9 +67,6 @@ function birlikteOynaToggle() {
             btn.classList.add('btn-green');
         }
 
-        // Floating butonu da güncelle
-        floatingBirlikteGuncelle(true);
-
         bildirimGoster("Artık diğer oyuncular seni görebilir! 📡", "basari");
 
         // Konum güncellemesi başlat
@@ -88,9 +87,6 @@ function birlikteOynaToggle() {
             btn.classList.remove('btn-green');
             btn.classList.add('btn-outline');
         }
-
-        // Floating butonu da güncelle
-        floatingBirlikteGuncelle(false);
 
         bildirimGoster("Görünürlük kapatıldı.", "bilgi");
     }
@@ -280,7 +276,7 @@ function davetPopupGoster(request) {
     if (baslikEl) baslikEl.textContent = (request.senderName || 'Bir oyuncu') + ' seni davet ediyor!';
 
     var aciklamaEl = document.getElementById('davet-aciklama');
-    if (aciklamaEl) aciklamaEl.textContent = 'Birlikte quiz oynayıp 3x puan kazanmak ister misin?';
+    if (aciklamaEl) aciklamaEl.textContent = 'Birlikte quiz oynayıp 2x puan kazanmak ister misin?';
 
     davetPopupAc();
 
@@ -740,7 +736,7 @@ function tkmKazananBelirle(secim1, secim2) {
 }
 
 // ──────────────────────────────────────────────
-// ADIM 7 — 3x QUIZ
+// ADIM 7 — 2x QUIZ
 // ──────────────────────────────────────────────
 function birlikteQuizBaslatUI() {
     console.log("[multiplayer.js] Birlikte quiz başlatılıyor...");
@@ -755,10 +751,10 @@ function birlikteQuizBaslatUI() {
 }
 
 function birlikteQuizBaslat(locationId) {
-    console.log("[multiplayer.js] 3x quiz başlatılıyor. Lokasyon:", locationId);
+    console.log("[multiplayer.js] 2x quiz başlatılıyor. Lokasyon:", locationId);
 
-    // 3x çarpanı ayarla
-    mevcutQuiz.birlikteCarpan = 3;
+    // 2x çarpanı ayarla
+    mevcutQuiz.birlikteCarpan = 2;
 
     // Quiz başlat
     quizBaslat(locationId);
@@ -766,11 +762,11 @@ function birlikteQuizBaslat(locationId) {
     // Birlikte quiz mesafe takibini başlat
     birlikteQuizMesafeTakibiBaslat();
 
-    bildirimGoster("🎮 3x Puan ile quiz başlıyor!", "basari");
+    bildirimGoster("🎮 2x Puan ile quiz başlıyor!", "basari");
 }
 
 // ──────────────────────────────────────────────
-// BİRLİKTE QUIZ MESAFE TAKİBİ (≤50m → 3x, >50m → 1x kalıcı)
+// BİRLİKTE QUIZ MESAFE TAKİBİ (≤50m → 2x, >50m → 1x kalıcı)
 // ──────────────────────────────────────────────
 var birlikteMesafeKayip = false; // Bir kez 50m aşıldıysa geri dönmez
 
@@ -810,7 +806,7 @@ function birlikteQuizMesafeKontrol() {
         mevcutQuiz.birlikteCarpan = 1;
 
         console.warn("[multiplayer.js] Birlikte mesafe aşıldı:", Math.round(mesafe) + "m. Çarpan 1x'e düştü.");
-        bildirimGoster("⚠️ Ayrıldınız! Çarpan 1x'e düştü. Tekrar 3x'e dönülmez.", "uyari");
+        bildirimGoster("⚠️ Ayrıldınız! Çarpan 1x'e düştü. Tekrar 2x'e dönülmez.", "uyari");
 
         // Mesafe takibini durdur (artık geri dönüşü yok)
         birlikteQuizMesafeTakibiDurdur();
@@ -960,71 +956,6 @@ function karsilikliNavigasyonBaslat() {
 }
 
 // ──────────────────────────────────────────────
-// FLOATING BİRLİKTE OYNA BUTONU YÖNETİMİ
-// ──────────────────────────────────────────────
-function floatingBirlikteGuncelle(acikMi) {
-    var floatingBtn = document.getElementById('floating-birlikte-btn');
-    if (!floatingBtn) return;
-
-    if (acikMi) {
-        floatingBtn.innerHTML = '👥 <span class="floating-birlikte-metin">3x Aktif</span>';
-        floatingBtn.classList.remove('floating-birlikte-kapali');
-        floatingBtn.classList.add('floating-birlikte-acik');
-    } else {
-        floatingBtn.innerHTML = '👥 <span class="floating-birlikte-metin">Birlikte</span>';
-        floatingBtn.classList.remove('floating-birlikte-acik');
-        floatingBtn.classList.add('floating-birlikte-kapali');
-    }
-
-    // Mekan detaydaki butonu da senkronize et
-    var mekanBtn = document.getElementById('eslestirme-toggle-btn');
-    if (mekanBtn) {
-        if (acikMi) {
-            mekanBtn.innerHTML = '🟢 Görünürsün';
-            mekanBtn.classList.remove('btn-outline');
-            mekanBtn.classList.add('btn-green');
-        } else {
-            mekanBtn.innerHTML = '📡 Görünür Ol';
-            mekanBtn.classList.remove('btn-green');
-            mekanBtn.classList.add('btn-outline');
-        }
-    }
-}
-
-function floatingBirlikteToggle() {
-    if (!mevcutKullanici || !kullaniciBilgileri) {
-        bildirimGoster("Önce giriş yapmalısın.", "uyari");
-        return;
-    }
-    birlikteOynaToggle();
-}
-
-// ──────────────────────────────────────────────
-// 3x POPUP — MEKAN DETAY AÇILINCA (SESSION BAŞINA 1 KERE)
-// ──────────────────────────────────────────────
-function birlikteOynaPopupKontrol() {
-    if (birlikteOynaPopupGosterildi) return;
-    if (pairingOpenDurum) return;
-    if (!mevcutKullanici || !kullaniciBilgileri) return;
-
-    birlikteOynaPopupGosterildi = true;
-
-    var html = '<div style="text-align:center;">' +
-        '<div style="font-size:2.5rem;margin-bottom:12px;">👥</div>' +
-        '<h3 style="font-weight:700;margin-bottom:8px;">3x Puan Kazan!</h3>' +
-        '<p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:20px;">' +
-            'Birlikte Oyna\'yı aç, yakınındaki oyuncularla eşleş ve <strong style="color:var(--gold);">3x puan</strong> kazan!' +
-        '</p>' +
-        '<div style="display:flex;gap:12px;">' +
-            '<button class="btn btn-outline" style="flex:1;" onclick="modalKapat()">Şimdilik Değil</button>' +
-            '<button class="btn btn-gold" style="flex:1;" onclick="modalKapat();floatingBirlikteToggle()">🟢 Aç</button>' +
-        '</div>' +
-    '</div>';
-
-    modalGoster(html);
-}
-
-// ──────────────────────────────────────────────
 // TEMİZLİK
 // ──────────────────────────────────────────────
 function multiplayerTemizle() {
@@ -1052,7 +983,6 @@ function multiplayerTemizle() {
     bekleyenDavetKey = null;
     birlikteMesafeKayip = false;
     navDinleyiciAktif = false;
-    floatingBirlikteGuncelle(false);
 
     console.log("[multiplayer.js] Multiplayer temizlendi.");
 }

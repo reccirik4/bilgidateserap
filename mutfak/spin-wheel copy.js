@@ -250,18 +250,6 @@ async function carkSonucuDevam() {
             await puanEkle(mevcutKullanici.uid, nihai);
             await xpSeviyeGuncelle(mevcutKullanici.uid);
             console.log("[spin-wheel.js] Puan kaydedildi:", nihai);
-
-            // Birlikte oyna aktifse partner'e de aynı puanı yaz
-            if (mevcutQuiz.birlikteCarpan > 1 && partnerBilgileri && partnerBilgileri.uid) {
-                try {
-                    await puanEkle(partnerBilgileri.uid, nihai);
-                    await xpSeviyeGuncelle(partnerBilgileri.uid);
-                    console.log("[spin-wheel.js] Partner puanı da kaydedildi:", partnerBilgileri.uid, nihai);
-                    bildirimGoster("👥 Partnerine de " + formatPuan(nihai) + " puan eklendi!", "basari");
-                } catch (partnerError) {
-                    console.error("[spin-wheel.js] Partner puan hatası:", partnerError);
-                }
-            }
         } catch (error) {
             console.error("[spin-wheel.js] Puan kaydetme hatası:", error);
             bildirimGoster("Puan kaydedilirken hata oluştu.", "hata");

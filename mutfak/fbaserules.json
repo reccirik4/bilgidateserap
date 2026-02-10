@@ -1,0 +1,52 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+
+    "leaderboard": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+
+    "active_players": {
+      "$locationId": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid == $uid",
+          ".validate": "newData.hasChildren(['displayName', 'latitude', 'longitude', 'lastUpdate'])"
+        }
+      }
+    },
+
+    "pair_requests": {
+      ".read": "auth != null",
+      "$requestId": {
+        ".write": "auth != null && (!data.exists() || data.child('senderId').val() == auth.uid || data.child('receiverId').val() == auth.uid)",
+        ".validate": "newData.hasChildren(['senderId', 'receiverId', 'status', 'createdAt'])"
+      }
+    },
+
+    "chat_messages": {
+      "$pairId": {
+        ".read": "auth != null",
+        "$messageId": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['senderId', 'text', 'timestamp']) && newData.child('senderId').val() == auth.uid"
+        }
+      }
+    },
+
+    "redemptions": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    }
+  }
+}

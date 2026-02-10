@@ -331,13 +331,6 @@ function markeraTiklandi(lokasyon) {
     if (harita) {
         harita.panTo({ lat: lokasyon.latitude, lng: lokasyon.longitude });
     }
-
-    // Birlikte oyna 3x popup kontrolü (session başına 1 kere)
-    if (typeof birlikteOynaPopupKontrol === 'function') {
-        setTimeout(function() {
-            birlikteOynaPopupKontrol();
-        }, 500);
-    }
 }
 
 // Mesafe güncelle
