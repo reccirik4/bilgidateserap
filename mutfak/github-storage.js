@@ -1,6 +1,7 @@
 // ============================================================
 // GITHUB-STORAGE.JS
 // Museum Quest — GitHub'dan statik JSON verileri okuma/yazma
+// v2.0 — Modüler şehir bazlı lazy loading
 // Bağımlılıklar: github-parametreleri.js (kullaniciAdi, repoAdi, token, GITHUB_DOSYALARI)
 //                ui.js (bildirimGoster)
 // ============================================================
@@ -10,6 +11,13 @@ window.oyunLokasyonlari = [];
 window.soruHavuzu = {};
 window.odulListesi = [];
 window.isletmeListesi = [];
+
+// v2.0 — Modüler yapı değişkenleri
+window.sehirIndex = null;        // museum-quest-index.json içeriği
+window.mevcutSehir = null;       // Aktif şehir verisi { id, name, file, ... }
+window.mevcutSehirVeri = null;   // Aktif şehir JSON içeriği { cityId, locations, ... }
+window.yuklenenSorular = {};     // Lazy load edilmiş sorular cache: { locationId: [...] }
+window.isletmelerYuklendi = false; // İşletmeler yüklendi mi flag
 
 // SHA değerleri (güncelleme için gerekli)
 var githubShaKayitlari = {};
@@ -102,65 +110,40 @@ async function githubDosyaYaz(dosya, icerik, sha) {
     }
 }
 
+// ══════════════════════════════════════════════
+// v2.0 — MODÜLER VERİ YÜKLEME SİSTEMİ
+// ══════════════════════════════════════════════
+
 // ──────────────────────────────────────────────
-// TÜM STATİK VERİLERİ GITHUB'DAN ÇEK
+// ANA BAŞLATMA: index.json oku → GPS ile şehir bul → şehir yükle
 // ──────────────────────────────────────────────
 async function statikVerileriYukle() {
-    console.log("[github-storage.js] Statik veriler yükleniyor...");
-
-    var basarili = 0;
-    var toplam = 4;
+    console.log("[github-storage.js] v2.0 — Modüler veri yükleme başlıyor...");
 
     try {
-        // 1. Lokasyonları çek
-        var lokasyonlar = await githubDosyaOku(GITHUB_DOSYALARI.lokasyonlar);
-        if (lokasyonlar.icerik) {
-            window.oyunLokasyonlari = lokasyonlar.icerik;
-            basarili++;
-            console.log("[github-storage.js] Lokasyonlar yüklendi:", window.oyunLokasyonlari.length, "adet");
+        // 1. Ana index dosyasını oku (1 API çağrısı)
+        var indexSonuc = await githubDosyaOku(GITHUB_DOSYALARI.index);
+
+        if (indexSonuc.icerik) {
+            window.sehirIndex = indexSonuc.icerik;
+            console.log("[github-storage.js] Index yüklendi. Şehir sayısı:", window.sehirIndex.cities.length);
         } else {
-            console.warn("[github-storage.js] Lokasyonlar yüklenemedi, örnek veri kullanılacak.");
-            window.oyunLokasyonlari = ornekLokasyonlar();
+            console.warn("[github-storage.js] Index yüklenemedi, fallback kullanılacak.");
+            window.sehirIndex = ornekIndex();
         }
 
-        // 2. Soruları çek
-        var sorular = await githubDosyaOku(GITHUB_DOSYALARI.sorular);
-        if (sorular.icerik) {
-            window.soruHavuzu = sorular.icerik;
-            basarili++;
-            var toplamSoru = 0;
-            Object.keys(window.soruHavuzu).forEach(function(key) {
-                toplamSoru += window.soruHavuzu[key].length;
-            });
-            console.log("[github-storage.js] Sorular yüklendi:", toplamSoru, "adet");
-        } else {
-            console.warn("[github-storage.js] Sorular yüklenemedi, örnek veri kullanılacak.");
-            window.soruHavuzu = ornekSorular();
-        }
+        // 2. GPS ile en yakın şehri bul
+        var secilenSehir = await enYakinSehriBul();
+        window.mevcutSehir = secilenSehir;
+        console.log("[github-storage.js] Seçilen şehir:", secilenSehir.name, "(id:", secilenSehir.id + ")");
 
-        // 3. Ödülleri çek
-        var oduller = await githubDosyaOku(GITHUB_DOSYALARI.oduller);
-        if (oduller.icerik) {
-            window.odulListesi = oduller.icerik;
-            basarili++;
-            console.log("[github-storage.js] Ödüller yüklendi:", window.odulListesi.length, "adet");
-        } else {
-            console.warn("[github-storage.js] Ödüller yüklenemedi, örnek veri kullanılacak.");
-            window.odulListesi = ornekOduller();
-        }
+        // 3. Seçilen şehrin verilerini yükle (1 API çağrısı)
+        await sehirVerisiYukle(secilenSehir);
 
-        // 4. İşletmeleri çek
-        var isletmeler = await githubDosyaOku(GITHUB_DOSYALARI.isletmeler);
-        if (isletmeler.icerik) {
-            window.isletmeListesi = isletmeler.icerik;
-            basarili++;
-            console.log("[github-storage.js] İşletmeler yüklendi:", window.isletmeListesi.length, "adet");
-        } else {
-            console.warn("[github-storage.js] İşletmeler yüklenemedi, örnek veri kullanılacak.");
-            window.isletmeListesi = ornekIsletmeler();
-        }
+        console.log("[github-storage.js] Statik veri yükleme tamamlandı.",
+            "Lokasyon:", window.oyunLokasyonlari.length,
+            "Şehir:", secilenSehir.name);
 
-        console.log("[github-storage.js] Statik veri yükleme tamamlandı:", basarili + "/" + toplam, "başarılı");
     } catch (error) {
         console.error("[github-storage.js] Statik veri yükleme genel hata:", error);
         // Fallback: örnek veriler yükle
@@ -172,8 +155,262 @@ async function statikVerileriYukle() {
 }
 
 // ──────────────────────────────────────────────
-// ÖRNEK VERİLER (GitHub'a erişilemezse fallback)
+// GPS İLE EN YAKIN ŞEHRİ BUL
 // ──────────────────────────────────────────────
+function enYakinSehriBul() {
+    return new Promise(function(resolve) {
+        if (!window.sehirIndex || !window.sehirIndex.cities || window.sehirIndex.cities.length === 0) {
+            console.warn("[github-storage.js] Şehir index boş, varsayılan İstanbul.");
+            resolve({ id: "istanbul", name: "İstanbul", file: "city-istanbul.json", isletmelerFile: "city-istanbul-isletmeler.json", center: { lat: 41.0082, lng: 28.9784 }, zoom: 14, isActive: true });
+            return;
+        }
+
+        // GPS konumu almayı dene
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    console.log("[github-storage.js] GPS konumu alındı:", lat, lng);
+
+                    var enYakin = null;
+                    var enKisaMesafe = Infinity;
+
+                    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
+                        var sehir = window.sehirIndex.cities[i];
+                        if (!sehir.isActive) continue;
+
+                        var mesafe = gpsUzaklik(lat, lng, sehir.center.lat, sehir.center.lng);
+
+                        if (mesafe < enKisaMesafe) {
+                            enKisaMesafe = mesafe;
+                            enYakin = sehir;
+                        }
+                    }
+
+                    console.log("[github-storage.js] En yakın şehir:", enYakin.name, "Mesafe:", Math.round(enKisaMesafe / 1000) + "km");
+                    resolve(enYakin);
+                },
+                function(hata) {
+                    console.warn("[github-storage.js] GPS hatası, ilk aktif şehir seçiliyor:", hata.message);
+                    // GPS yoksa ilk aktif şehri seç
+                    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
+                        if (window.sehirIndex.cities[i].isActive) {
+                            resolve(window.sehirIndex.cities[i]);
+                            return;
+                        }
+                    }
+                    resolve(window.sehirIndex.cities[0]);
+                },
+                { timeout: 5000, enableHighAccuracy: false }
+            );
+        } else {
+            console.warn("[github-storage.js] Geolocation desteklenmiyor, ilk şehir seçiliyor.");
+            for (var i = 0; i < window.sehirIndex.cities.length; i++) {
+                if (window.sehirIndex.cities[i].isActive) {
+                    resolve(window.sehirIndex.cities[i]);
+                    return;
+                }
+            }
+            resolve(window.sehirIndex.cities[0]);
+        }
+    });
+}
+
+// GPS mesafe hesaplama (Haversine — metre cinsinden)
+function gpsUzaklik(lat1, lon1, lat2, lon2) {
+    var R = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// ──────────────────────────────────────────────
+// ŞEHİR VERİSİ YÜKLE (city-xxx.json)
+// ──────────────────────────────────────────────
+async function sehirVerisiYukle(sehirBilgisi) {
+    console.log("[github-storage.js] Şehir verisi yükleniyor:", sehirBilgisi.file);
+
+    var sehirSonuc = await githubDosyaOku(sehirBilgisi.file);
+
+    if (sehirSonuc.icerik) {
+        window.mevcutSehirVeri = sehirSonuc.icerik;
+        window.oyunLokasyonlari = sehirSonuc.icerik.locations || [];
+        console.log("[github-storage.js] Şehir yüklendi:", sehirBilgisi.name,
+            "Lokasyon:", window.oyunLokasyonlari.length);
+    } else {
+        console.warn("[github-storage.js] Şehir verisi yüklenemedi, fallback kullanılacak.");
+        window.oyunLokasyonlari = ornekLokasyonlar();
+    }
+
+    // Soru havuzunu temizle (yeni şehir = yeni sorular)
+    window.soruHavuzu = {};
+    window.yuklenenSorular = {};
+
+    // İşletmeleri temizle (yeni şehir = yeni işletmeler)
+    window.odulListesi = [];
+    window.isletmeListesi = [];
+    window.isletmelerYuklendi = false;
+}
+
+// ──────────────────────────────────────────────
+// ŞEHİR DEĞİŞTİR (kullanıcı başka şehre geçerse)
+// ──────────────────────────────────────────────
+async function sehirDegistir(sehirId) {
+    console.log("[github-storage.js] Şehir değiştiriliyor:", sehirId);
+
+    if (!window.sehirIndex || !window.sehirIndex.cities) {
+        bildirimGoster("Şehir bilgisi bulunamadı.", "hata");
+        return false;
+    }
+
+    var yeniSehir = null;
+    for (var i = 0; i < window.sehirIndex.cities.length; i++) {
+        if (window.sehirIndex.cities[i].id === sehirId) {
+            yeniSehir = window.sehirIndex.cities[i];
+            break;
+        }
+    }
+
+    if (!yeniSehir) {
+        bildirimGoster("Şehir bulunamadı: " + sehirId, "hata");
+        return false;
+    }
+
+    window.mevcutSehir = yeniSehir;
+    await sehirVerisiYukle(yeniSehir);
+
+    // Haritayı yeni şehre merkezle
+    if (typeof harita !== 'undefined' && harita) {
+        harita.panTo({ lat: yeniSehir.center.lat, lng: yeniSehir.center.lng });
+        harita.setZoom(yeniSehir.zoom || 14);
+    }
+
+    // Marker'ları yeniden yükle
+    if (typeof lokasyonlariHaritayaEkle === 'function') {
+        // Mevcut marker'ları temizle
+        if (typeof lokasyonMarkerlar !== 'undefined') {
+            Object.keys(lokasyonMarkerlar).forEach(function(key) {
+                if (lokasyonMarkerlar[key]) lokasyonMarkerlar[key].setMap(null);
+            });
+            lokasyonMarkerlar = {};
+        }
+        lokasyonlariHaritayaEkle();
+    }
+
+    console.log("[github-storage.js] Şehir değiştirildi:", yeniSehir.name);
+    return true;
+}
+
+// ──────────────────────────────────────────────
+// LOKASYON SORULARINI LAZY LOAD ET
+// Quiz başlayınca çağrılır — sadece o lokasyonun soruları yüklenir
+// ──────────────────────────────────────────────
+async function lokasyonSorulariniYukle(locationId) {
+    console.log("[github-storage.js] Sorular lazy load ediliyor:", locationId);
+
+    // Zaten yüklenmişse cache'ten döndür
+    if (window.soruHavuzu[locationId] && window.soruHavuzu[locationId].length > 0) {
+        console.log("[github-storage.js] Sorular cache'ten geldi:", locationId,
+            window.soruHavuzu[locationId].length, "adet");
+        return window.soruHavuzu[locationId];
+    }
+
+    // Lokasyonun questionsFile bilgisini bul
+    var questionsFile = null;
+    for (var i = 0; i < window.oyunLokasyonlari.length; i++) {
+        if (window.oyunLokasyonlari[i].id === locationId) {
+            questionsFile = window.oyunLokasyonlari[i].questionsFile;
+            break;
+        }
+    }
+
+    if (!questionsFile) {
+        console.error("[github-storage.js] questionsFile bulunamadı:", locationId);
+        // Fallback sorulara bak
+        var fallback = ornekSorular();
+        if (fallback[locationId]) {
+            window.soruHavuzu[locationId] = fallback[locationId];
+            return fallback[locationId];
+        }
+        return null;
+    }
+
+    // GitHub'dan soru dosyasını oku (1 API çağrısı)
+    var soruSonuc = await githubDosyaOku(questionsFile);
+
+    if (soruSonuc.icerik && Array.isArray(soruSonuc.icerik) && soruSonuc.icerik.length > 0) {
+        window.soruHavuzu[locationId] = soruSonuc.icerik;
+        window.yuklenenSorular[locationId] = true;
+        console.log("[github-storage.js] Sorular yüklendi:", locationId,
+            soruSonuc.icerik.length, "adet");
+        return soruSonuc.icerik;
+    } else {
+        console.warn("[github-storage.js] Sorular yüklenemedi:", questionsFile, "Fallback deneniyor...");
+        // Fallback
+        var fallback = ornekSorular();
+        if (fallback[locationId]) {
+            window.soruHavuzu[locationId] = fallback[locationId];
+            return fallback[locationId];
+        }
+        return null;
+    }
+}
+
+// ──────────────────────────────────────────────
+// ŞEHİR İŞLETMELERİNİ LAZY LOAD ET
+// Ödül ekranı açılınca çağrılır
+// ──────────────────────────────────────────────
+async function sehirIsletmeleriniYukle() {
+    // Zaten yüklendiyse tekrar yükleme
+    if (window.isletmelerYuklendi && window.isletmeListesi.length > 0) {
+        console.log("[github-storage.js] İşletmeler zaten yüklü.");
+        return true;
+    }
+
+    if (!window.mevcutSehir || !window.mevcutSehir.isletmelerFile) {
+        console.warn("[github-storage.js] İşletme dosyası bilgisi yok.");
+        window.isletmeListesi = ornekIsletmeler();
+        window.odulListesi = ornekOduller();
+        return false;
+    }
+
+    console.log("[github-storage.js] İşletmeler lazy load ediliyor:", window.mevcutSehir.isletmelerFile);
+
+    var sonuc = await githubDosyaOku(window.mevcutSehir.isletmelerFile);
+
+    if (sonuc.icerik) {
+        window.isletmeListesi = sonuc.icerik.isletmeler || [];
+        window.odulListesi = sonuc.icerik.oduller || [];
+        window.isletmelerYuklendi = true;
+        console.log("[github-storage.js] İşletmeler yüklendi:",
+            window.isletmeListesi.length, "işletme,",
+            window.odulListesi.length, "ödül");
+        return true;
+    } else {
+        console.warn("[github-storage.js] İşletmeler yüklenemedi, fallback kullanılacak.");
+        window.isletmeListesi = ornekIsletmeler();
+        window.odulListesi = ornekOduller();
+        return false;
+    }
+}
+
+// ══════════════════════════════════════════════
+// FALLBACK ÖRNEK VERİLER
+// ══════════════════════════════════════════════
+
+function ornekIndex() {
+    return {
+        version: "2.0",
+        cities: [
+            { id: "istanbul", name: "İstanbul", file: "city-istanbul.json", isletmelerFile: "city-istanbul-isletmeler.json", locationCount: 5, center: { lat: 41.0082, lng: 28.9784 }, zoom: 14, isActive: true }
+        ]
+    };
+}
 
 function ornekLokasyonlar() {
     return [
@@ -181,11 +418,12 @@ function ornekLokasyonlar() {
             id: "loc_001",
             name: "Topkapı Sarayı",
             description: "Osmanlı İmparatorluğu'nun 400 yıllık idare merkezi",
+            questionsFile: "questions-loc_001.json",
             photoURL: "",
             latitude: 41.0115,
             longitude: 28.9833,
             difficulty: "medium",
-            questionCount: 50,
+            questionCount: 10,
             entryRadius: 1000,
             exitRadius: 2000,
             isActive: true
@@ -194,11 +432,12 @@ function ornekLokasyonlar() {
             id: "loc_002",
             name: "Ayasofya",
             description: "537 yılında inşa edilen mimari şaheser",
+            questionsFile: "questions-loc_002.json",
             photoURL: "",
             latitude: 41.0086,
             longitude: 28.9802,
             difficulty: "hard",
-            questionCount: 40,
+            questionCount: 2,
             entryRadius: 1000,
             exitRadius: 2000,
             isActive: true
@@ -207,11 +446,12 @@ function ornekLokasyonlar() {
             id: "loc_003",
             name: "İstanbul Arkeoloji Müzeleri",
             description: "Üç müzeden oluşan dünyanın en büyük müze komplekslerinden biri",
+            questionsFile: "questions-loc_003.json",
             photoURL: "",
             latitude: 41.0117,
             longitude: 28.9814,
             difficulty: "easy",
-            questionCount: 30,
+            questionCount: 1,
             entryRadius: 1000,
             exitRadius: 2000,
             isActive: true
@@ -220,11 +460,12 @@ function ornekLokasyonlar() {
             id: "loc_004",
             name: "Basilika Sarnıcı",
             description: "532 yılında inşa edilen yeraltı su deposu",
+            questionsFile: "questions-loc_004.json",
             photoURL: "",
             latitude: 41.0084,
             longitude: 28.9779,
             difficulty: "medium",
-            questionCount: 20,
+            questionCount: 1,
             entryRadius: 1000,
             exitRadius: 2000,
             isActive: true
@@ -233,11 +474,12 @@ function ornekLokasyonlar() {
             id: "loc_005",
             name: "Türk ve İslam Eserleri Müzesi",
             description: "İbrahim Paşa Sarayı'nda konumlanan zengin koleksiyon",
+            questionsFile: "questions-loc_005.json",
             photoURL: "",
             latitude: 41.0063,
             longitude: 28.9753,
             difficulty: "medium",
-            questionCount: 25,
+            questionCount: 1,
             entryRadius: 1000,
             exitRadius: 2000,
             isActive: true
@@ -248,344 +490,34 @@ function ornekLokasyonlar() {
 function ornekSorular() {
     return {
         "loc_001": [
-            {
-                id: "q_001",
-                text: "Topkapı Sarayı hangi yılda müzeye dönüştürüldü?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "1924", correct: true },
-                    { text: "1934", correct: false },
-                    { text: "1938", correct: false },
-                    { text: "1952", correct: false }
-                ],
-                explanation: "Topkapı Sarayı 3 Nisan 1924'te müzeye dönüştürüldü."
-            },
-            {
-                id: "q_002",
-                text: "Topkapı Sarayı'nın yapımına hangi padişah döneminde başlanmıştır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "easy",
-                points: 10,
-                timeLimit: 15,
-                options: [
-                    { text: "Fatih Sultan Mehmet", correct: true },
-                    { text: "Kanuni Sultan Süleyman", correct: false },
-                    { text: "Yavuz Sultan Selim", correct: false },
-                    { text: "II. Bayezid", correct: false }
-                ],
-                explanation: "Topkapı Sarayı'nın yapımına 1460 yılında Fatih Sultan Mehmet tarafından başlanmıştır."
-            },
-            {
-                id: "q_003",
-                text: "Topkapı Sarayı'nda kaç avlu bulunmaktadır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "4", correct: true },
-                    { text: "3", correct: false },
-                    { text: "5", correct: false },
-                    { text: "2", correct: false }
-                ],
-                explanation: "Topkapı Sarayı dört ana avludan oluşmaktadır."
-            },
-            {
-                id: "q_004",
-                text: "Harem bölümünde yaklaşık kaç oda vardır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "hard",
-                points: 50,
-                timeLimit: 15,
-                options: [
-                    { text: "400", correct: true },
-                    { text: "200", correct: false },
-                    { text: "600", correct: false },
-                    { text: "100", correct: false }
-                ],
-                explanation: "Harem bölümünde yaklaşık 400 oda bulunmaktadır."
-            },
-            {
-                id: "q_005",
-                text: "Topkapı Sarayı hangi yarımadanın ucunda yer alır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "easy",
-                points: 10,
-                timeLimit: 15,
-                options: [
-                    { text: "Sarayburnu", correct: true },
-                    { text: "Kadıköy", correct: false },
-                    { text: "Üsküdar", correct: false },
-                    { text: "Eminönü", correct: false }
-                ],
-                explanation: "Topkapı Sarayı, İstanbul'un tarihi yarımadasının ucundaki Sarayburnu'nda yer alır."
-            },
-            {
-                id: "q_006",
-                text: "Kaşıkçı Elması hangi bölümde sergilenmektedir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "Hazine Dairesi", correct: true },
-                    { text: "Harem", correct: false },
-                    { text: "Arz Odası", correct: false },
-                    { text: "Enderun", correct: false }
-                ],
-                explanation: "Kaşıkçı Elması, Topkapı Sarayı Hazine Dairesi'nde sergilenmektedir."
-            },
-            {
-                id: "q_007",
-                text: "Topkapı Sarayı kaç yıl Osmanlı'nın idare merkezi olarak kullanılmıştır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "Yaklaşık 400 yıl", correct: true },
-                    { text: "Yaklaşık 200 yıl", correct: false },
-                    { text: "Yaklaşık 600 yıl", correct: false },
-                    { text: "Yaklaşık 150 yıl", correct: false }
-                ],
-                explanation: "Topkapı Sarayı 1465-1856 yılları arasında yaklaşık 400 yıl idare merkezi olarak kullanılmıştır."
-            },
-            {
-                id: "q_008",
-                text: "Topkapı Sarayı'nın toplam alanı yaklaşık kaç metrekaredir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "hard",
-                points: 50,
-                timeLimit: 15,
-                options: [
-                    { text: "700.000 m²", correct: true },
-                    { text: "300.000 m²", correct: false },
-                    { text: "1.000.000 m²", correct: false },
-                    { text: "150.000 m²", correct: false }
-                ],
-                explanation: "Topkapı Sarayı yaklaşık 700.000 metrekarelik bir alanı kaplamaktadır."
-            },
-            {
-                id: "q_009",
-                text: "Bab-ı Hümayun ne anlama gelir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "İmparatorluk Kapısı", correct: true },
-                    { text: "Selam Kapısı", correct: false },
-                    { text: "Saadet Kapısı", correct: false },
-                    { text: "Cennet Kapısı", correct: false }
-                ],
-                explanation: "Bab-ı Hümayun, 'İmparatorluk Kapısı' anlamına gelen ana giriş kapısıdır."
-            },
-            {
-                id: "q_010",
-                text: "Topkapı Sarayı UNESCO Dünya Mirası listesine hangi yıl eklenmiştir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "hard",
-                points: 50,
-                timeLimit: 15,
-                options: [
-                    { text: "1985", correct: true },
-                    { text: "1990", correct: false },
-                    { text: "1978", correct: false },
-                    { text: "2000", correct: false }
-                ],
-                explanation: "Topkapı Sarayı, İstanbul'un tarihi alanlarının bir parçası olarak 1985'te UNESCO listesine eklenmiştir."
-            }
+            { id: "q_001", text: "Topkapı Sarayı hangi yılda müzeye dönüştürüldü?", imageURL: null, type: "multiple_choice", difficulty: "medium", points: 25, timeLimit: 15, options: [ { text: "1924", correct: true }, { text: "1934", correct: false }, { text: "1938", correct: false }, { text: "1952", correct: false } ], explanation: "Topkapı Sarayı 3 Nisan 1924'te müzeye dönüştürüldü." },
+            { id: "q_002", text: "Topkapı Sarayı'nın yapımına hangi padişah döneminde başlanmıştır?", imageURL: null, type: "multiple_choice", difficulty: "medium", points: 25, timeLimit: 15, options: [ { text: "Fatih Sultan Mehmed", correct: true }, { text: "Kanuni Sultan Süleyman", correct: false }, { text: "Yavuz Sultan Selim", correct: false }, { text: "II. Bayezid", correct: false } ], explanation: "Topkapı Sarayı'nın yapımına 1460'ta Fatih Sultan Mehmed döneminde başlanmıştır." }
         ],
         "loc_002": [
-            {
-                id: "q_101",
-                text: "Ayasofya ilk olarak hangi yılda ibadete açılmıştır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "537", correct: true },
-                    { text: "532", correct: false },
-                    { text: "550", correct: false },
-                    { text: "527", correct: false }
-                ],
-                explanation: "Ayasofya, 537 yılında Justinianus döneminde ibadete açılmıştır."
-            },
-            {
-                id: "q_102",
-                text: "Ayasofya'yı yaptıran Bizans imparatoru kimdir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "easy",
-                points: 10,
-                timeLimit: 15,
-                options: [
-                    { text: "I. Justinianus", correct: true },
-                    { text: "Konstantin", correct: false },
-                    { text: "Theodosius", correct: false },
-                    { text: "II. Mehmed", correct: false }
-                ],
-                explanation: "Ayasofya, I. Justinianus tarafından yaptırılmıştır."
-            }
+            { id: "q_101", text: "Ayasofya ilk olarak hangi yılda ibadete açılmıştır?", imageURL: null, type: "multiple_choice", difficulty: "medium", points: 25, timeLimit: 15, options: [ { text: "537", correct: true }, { text: "532", correct: false }, { text: "550", correct: false }, { text: "527", correct: false } ], explanation: "Ayasofya, 537 yılında Justinianus döneminde ibadete açılmıştır." }
         ],
         "loc_003": [
-            {
-                id: "q_201",
-                text: "İstanbul Arkeoloji Müzeleri kaç müzeden oluşur?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "easy",
-                points: 10,
-                timeLimit: 15,
-                options: [
-                    { text: "3", correct: true },
-                    { text: "2", correct: false },
-                    { text: "5", correct: false },
-                    { text: "4", correct: false }
-                ],
-                explanation: "Arkeoloji Müzesi, Eski Şark Eserleri Müzesi ve Çinili Köşk olmak üzere 3 müzeden oluşur."
-            }
+            { id: "q_201", text: "İstanbul Arkeoloji Müzeleri kaç müzeden oluşur?", imageURL: null, type: "multiple_choice", difficulty: "easy", points: 10, timeLimit: 15, options: [ { text: "3", correct: true }, { text: "2", correct: false }, { text: "5", correct: false }, { text: "4", correct: false } ], explanation: "Arkeoloji Müzesi, Eski Şark Eserleri Müzesi ve Çinili Köşk olmak üzere 3 müzeden oluşur." }
         ],
         "loc_004": [
-            {
-                id: "q_301",
-                text: "Basilika Sarnıcı hangi yılda inşa edilmiştir?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "532", correct: true },
-                    { text: "537", correct: false },
-                    { text: "500", correct: false },
-                    { text: "560", correct: false }
-                ],
-                explanation: "Basilika Sarnıcı, 532 yılında I. Justinianus döneminde inşa edilmiştir."
-            }
+            { id: "q_301", text: "Basilika Sarnıcı hangi yılda inşa edilmiştir?", imageURL: null, type: "multiple_choice", difficulty: "medium", points: 25, timeLimit: 15, options: [ { text: "532", correct: true }, { text: "537", correct: false }, { text: "500", correct: false }, { text: "560", correct: false } ], explanation: "Basilika Sarnıcı, 532 yılında I. Justinianus döneminde inşa edilmiştir." }
         ],
         "loc_005": [
-            {
-                id: "q_401",
-                text: "Türk ve İslam Eserleri Müzesi hangi tarihi binada yer alır?",
-                imageURL: null,
-                type: "multiple_choice",
-                difficulty: "medium",
-                points: 25,
-                timeLimit: 15,
-                options: [
-                    { text: "İbrahim Paşa Sarayı", correct: true },
-                    { text: "Topkapı Sarayı", correct: false },
-                    { text: "Dolmabahçe Sarayı", correct: false },
-                    { text: "Çırağan Sarayı", correct: false }
-                ],
-                explanation: "Müze, Sultanahmet Meydanı'ndaki İbrahim Paşa Sarayı'nda konumlanmaktadır."
-            }
+            { id: "q_401", text: "Türk ve İslam Eserleri Müzesi hangi tarihi binada yer alır?", imageURL: null, type: "multiple_choice", difficulty: "medium", points: 25, timeLimit: 15, options: [ { text: "İbrahim Paşa Sarayı", correct: true }, { text: "Topkapı Sarayı", correct: false }, { text: "Dolmabahçe Sarayı", correct: false }, { text: "Çırağan Sarayı", correct: false } ], explanation: "Müze, Sultanahmet Meydanı'ndaki İbrahim Paşa Sarayı'nda konumlanmaktadır." }
         ]
     };
 }
 
 function ornekOduller() {
     return [
-        {
-            id: "reward_001",
-            businessId: "biz_001",
-            businessName: "Kahve Dünyası",
-            businessLogo: "",
-            title: "%25 indirimli kahve",
-            description: "Tüm sıcak içeceklerde geçerli",
-            photoURL: "",
-            requiredPoints: 2000,
-            category: "drink",
-            latitude: 41.0120,
-            longitude: 28.9840,
-            stock: 50,
-            validUntil: "2026-12-31",
-            isActive: true
-        },
-        {
-            id: "reward_002",
-            businessId: "biz_002",
-            businessName: "Tarihi Sultanahmet Köftecisi",
-            businessLogo: "",
-            title: "1 porsiyon ücretsiz köfte",
-            description: "Ana menüden 1 porsiyon köfte hediye",
-            photoURL: "",
-            requiredPoints: 5000,
-            category: "food",
-            latitude: 41.0070,
-            longitude: 28.9760,
-            stock: 20,
-            validUntil: "2026-12-31",
-            isActive: true
-        },
-        {
-            id: "reward_003",
-            businessId: "biz_003",
-            businessName: "Grand Bazaar Hediyelik",
-            businessLogo: "",
-            title: "%30 indirim",
-            description: "Tüm hediyelik eşyalarda geçerli",
-            photoURL: "",
-            requiredPoints: 3000,
-            category: "shopping",
-            latitude: 41.0107,
-            longitude: 28.9681,
-            stock: 30,
-            validUntil: "2026-12-31",
-            isActive: true
-        }
+        { id: "reward_001", businessId: "biz_001", businessName: "Kahve Dünyası", businessLogo: "", title: "%25 indirimli kahve", description: "Tüm sıcak içeceklerde geçerli", photoURL: "", requiredPoints: 2000, category: "drink", latitude: 41.0120, longitude: 28.9840, stock: 50, validUntil: "2026-12-31", isActive: true }
     ];
 }
 
 function ornekIsletmeler() {
     return [
-        {
-            id: "biz_001",
-            name: "Kahve Dünyası",
-            logo: "",
-            address: "Sultanahmet Mah. No:12",
-            latitude: 41.0120,
-            longitude: 28.9840,
-            contactEmail: "info@kahvedunyasi.com",
-            contactPhone: "0212 555 1234"
-        },
-        {
-            id: "biz_002",
-            name: "Tarihi Sultanahmet Köftecisi",
-            logo: "",
-            address: "Sultanahmet Mah. Divanyolu Cad. No:12",
-            latitude: 41.0070,
-            longitude: 28.9760,
-            contactEmail: "info@sultanahmetkoftecisi.com",
-            contactPhone: "0212 520 0566"
-        },
-        {
-            id: "biz_003",
-            name: "Grand Bazaar Hediyelik",
-            logo: "",
-            address: "Kapalıçarşı, Fatih",
-            latitude: 41.0107,
-            longitude: 28.9681,
-            contactEmail: "info@grandbazaar.com",
-            contactPhone: "0212 555 5678"
-        }
+        { id: "biz_001", name: "Kahve Dünyası", logo: "", address: "Sultanahmet Mah. No:12", latitude: 41.0120, longitude: 28.9840, contactEmail: "info@kahvedunyasi.com", contactPhone: "0212 555 1234" }
     ];
 }
 
-console.log("[github-storage.js] GitHub storage modülü yüklendi.");
+console.log("[github-storage.js] GitHub storage modülü yüklendi. (v2.0 — Modüler)");

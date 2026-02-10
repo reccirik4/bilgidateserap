@@ -1,10 +1,9 @@
 // ============================================================
 // QUIZ.JS
 // Museum Quest — Bilgi yarışması motoru
-// v2.0 — Lazy loading soru desteği
 // Bağımlılıklar: auth.js (mevcutKullanici, kullaniciBilgileri)
 //                database.js (puanEkle, oyunSayisiArtir, xpSeviyeGuncelle)
-//                github-storage.js (window.soruHavuzu, lokasyonSorulariniYukle)
+//                github-storage.js (window.soruHavuzu)
 //                map.js (mevcutKonum, mesafeHesapla, mevcutMekanVeri)
 //                ui.js (ekranGoster, bildirimGoster, formatSure, diziKaristir, konfetiGoster)
 //                profile.js (rozetKontrolVeEkle)
@@ -29,9 +28,9 @@ var mevcutQuiz = {
 };
 
 // ──────────────────────────────────────────────
-// QUIZ BAŞLAT (v2.0 — async + lazy soru yükleme)
+// QUIZ BAŞLAT
 // ──────────────────────────────────────────────
-async function quizBaslat(locationId) {
+function quizBaslat(locationId) {
     console.log("[quiz.js] Quiz başlatılıyor. Lokasyon:", locationId);
 
     if (!locationId) {
@@ -39,19 +38,11 @@ async function quizBaslat(locationId) {
         return;
     }
 
-    // v2.0 — Sorular henüz yüklenmemişse lazy load et
+    // Soru havuzunda bu lokasyon var mı kontrol et
     var havuz = window.soruHavuzu[locationId];
     if (!havuz || havuz.length === 0) {
-        // Yükleme göster
-        bildirimGoster("📚 Sorular yükleniyor...", "bilgi");
-
-        // Lazy load: GitHub'dan soru dosyasını çek
-        havuz = await lokasyonSorulariniYukle(locationId);
-
-        if (!havuz || havuz.length === 0) {
-            bildirimGoster("Bu mekan için henüz soru eklenmemiş.", "uyari");
-            return;
-        }
+        bildirimGoster("Bu mekan için henüz soru eklenmemiş.", "uyari");
+        return;
     }
 
     // Lokasyon verisini bul
@@ -451,4 +442,4 @@ function quizZorlaBitir(neden) {
     }, 1000);
 }
 
-console.log("[quiz.js] Quiz modülü yüklendi. (v2.0 — Lazy Loading)");
+console.log("[quiz.js] Quiz modülü yüklendi.");

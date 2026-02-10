@@ -1,6 +1,7 @@
 // ============================================================
 // APP.JS
 // Museum Quest — Uygulama başlatıcı
+// v2.0 — Modüler şehir bazlı veri sistemi
 // Bu dosya en son yüklenir ve tüm modülleri tetikler.
 // Bağımlılıklar: Tüm önceki JS dosyaları
 // ============================================================
@@ -8,19 +9,22 @@
 // Sayfa yüklendiğinde
 window.addEventListener('DOMContentLoaded', async function() {
     console.log("===========================================");
-    console.log("🏛️ Museum Quest başlatılıyor...");
+    console.log("🏛️ Museum Quest v2.0 başlatılıyor...");
     console.log("===========================================");
 
     yuklemeGoster("Museum Quest yükleniyor...");
 
     try {
-        // 1. GitHub'dan statik verileri yükle
-        console.log("[app.js] 1/3 — Statik veriler yükleniyor...");
+        // 1. GitHub'dan modüler verileri yükle
+        // v2.0: index.json → GPS ile şehir bul → sadece o şehrin dosyasını yükle
+        console.log("[app.js] 1/3 — Modüler veriler yükleniyor...");
         await statikVerileriYukle();
-        console.log("[app.js] Statik veriler yüklendi. Lokasyon:", window.oyunLokasyonlari.length,
-            "Soru:", Object.keys(window.soruHavuzu).length, "lokasyon",
-            "Ödül:", window.odulListesi.length,
-            "İşletme:", window.isletmeListesi.length);
+
+        var sehirAdi = window.mevcutSehir ? window.mevcutSehir.name : 'Bilinmiyor';
+        console.log("[app.js] Veriler yüklendi.",
+            "Şehir:", sehirAdi,
+            "Lokasyon:", window.oyunLokasyonlari.length,
+            "(Sorular quiz başlayınca lazy load edilecek)");
 
         // 2. Firebase auth durumu kontrol edilecek
         // auth.js'deki onAuthStateChanged otomatik tetiklenir:
@@ -42,73 +46,6 @@ window.addEventListener('DOMContentLoaded', async function() {
         yuklemeKapat();
     }, 1500);
 
-    console.log("[app.js] Başlatma tamamlandı.");
+    console.log("[app.js] Başlatma tamamlandı. Aktif şehir:",
+        window.mevcutSehir ? window.mevcutSehir.name : 'Yok');
 });
-
-// ──────────────────────────────────────────────
-// SERVİS WORKER (PWA desteği — opsiyonel)
-// ──────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        // Service worker dosyası varsa kaydet
-        // navigator.serviceWorker.register('/sw.js').catch(function() {});
-    });
-}
-
-// ──────────────────────────────────────────────
-// SAYFA KAPANIRKEN TEMİZLİK
-// ──────────────────────────────────────────────
-window.addEventListener('beforeunload', function() {
-    console.log("[app.js] Sayfa kapanıyor, temizlik yapılıyor...");
-
-    // Konum takibini durdur
-    if (konumWatchId) {
-        navigator.geolocation.clearWatch(konumWatchId);
-    }
-
-    // Multiplayer temizliği
-    if (typeof multiplayerTemizle === 'function') {
-        multiplayerTemizle();
-    }
-
-    // Aktif oyuncu kaydını sil
-    if (mevcutKullanici && mevcutMekanId) {
-        aktifOyuncuSil(mevcutMekanId, mevcutKullanici.uid);
-    }
-});
-
-// ──────────────────────────────────────────────
-// GÖRÜNÜRLÜK DEĞİŞİMİ (tab değişimi)
-// ──────────────────────────────────────────────
-document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-        console.log("[app.js] Uygulama tekrar görünür oldu.");
-
-        // Harita puanını güncelle
-        if (typeof haritaPuanGuncelle === 'function') {
-            haritaPuanGuncelle();
-        }
-
-        // Aktif oyuncu konumunu güncelle
-        if (pairingOpenDurum && mevcutKullanici && mevcutMekanId && mevcutKonum.lat) {
-            dbGuncelle('active_players/' + mevcutMekanId + '/' + mevcutKullanici.uid, {
-                latitude: mevcutKonum.lat,
-                longitude: mevcutKonum.lng,
-                lastUpdate: Date.now()
-            });
-        }
-    }
-});
-
-// ──────────────────────────────────────────────
-// GLOBAL HATA YAKALAMA
-// ──────────────────────────────────────────────
-window.addEventListener('error', function(event) {
-    console.error("[app.js] Global hata:", event.message, event.filename, event.lineno);
-});
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error("[app.js] Yakalanmamış Promise hatası:", event.reason);
-});
-
-console.log("[app.js] App modülü yüklendi. DOMContentLoaded bekleniyor...");

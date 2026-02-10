@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#f5f5fa">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Museum Quest</title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ==================== GİRİŞ EKRANI ==================== -->
+    <div id="ekran-giris" class="ekran">
+        <div class="giris-logo">🏛️</div>
+        <h1 class="giris-baslik">Museum Quest</h1>
+        <p class="giris-aciklama">Müzeleri keşfet, bilgi yarışmasına katıl, gerçek ödüller kazan!</p>
+        <button class="google-btn" onclick="googleIleGiris()">
+            <svg viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Google ile Giriş Yap
+        </button>
+    </div>
+
+    <!-- ==================== PROFİL OLUŞTUR ==================== -->
+    <div id="ekran-profil-olustur" class="ekran gizli">
+        <h2 class="sayfa-baslik">Profilini Oluştur</h2>
+        <p class="sayfa-alt-baslik">Bilgilerini doldur ve oyuna başla!</p>
+
+        <div class="profil-foto-wrapper">
+            <div class="profil-foto-degistir" onclick="document.getElementById('profil-foto-file').click()">
+                <img id="profil-olustur-foto" class="avatar avatar-xl" src="" alt="Profil">
+            </div>
+            <input type="file" id="profil-foto-file" class="profil-foto-input" accept="image/*" onchange="fotoSecildi(event)">
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Fotoğrafını değiştir</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">İsim</label>
+            <input type="text" id="profil-isim" class="input" placeholder="Adın">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Yaş</label>
+            <input type="number" id="profil-yas" class="input" placeholder="Yaşın" min="10" max="99">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Cinsiyet</label>
+            <select id="profil-cinsiyet" class="input">
+                <option value="unspecified">Belirtmek istemiyorum</option>
+                <option value="male">Erkek</option>
+                <option value="female">Kadın</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">İlgi Alanları</label>
+            <div id="ilgi-alanlari-container" class="ilgi-alanlari">
+                <div class="ilgi-chip" data-value="tarih" onclick="ilgiSec(this)">🏛️ Tarih</div>
+                <div class="ilgi-chip" data-value="sanat" onclick="ilgiSec(this)">🎨 Sanat</div>
+                <div class="ilgi-chip" data-value="arkeoloji" onclick="ilgiSec(this)">⛏️ Arkeoloji</div>
+                <div class="ilgi-chip" data-value="bilim" onclick="ilgiSec(this)">🔬 Bilim</div>
+                <div class="ilgi-chip" data-value="doga" onclick="ilgiSec(this)">🌿 Doğa</div>
+                <div class="ilgi-chip" data-value="teknoloji" onclick="ilgiSec(this)">💻 Teknoloji</div>
+                <div class="ilgi-chip" data-value="muzik" onclick="ilgiSec(this)">🎵 Müzik</div>
+                <div class="ilgi-chip" data-value="mimari" onclick="ilgiSec(this)">🏗️ Mimari</div>
+            </div>
+        </div>
+
+        <button class="btn btn-gold btn-block btn-lg" onclick="profilKaydet()" style="margin-top: 8px;">
+            🚀 Oyuna Başla
+        </button>
+    </div>
+
+    <!-- ==================== ANA HARİTA ==================== -->
+    <div id="ekran-harita" class="ekran gizli">
+        <div class="harita-ust-bar">
+            <div class="harita-puan-kutu">
+                <span class="puan-ikon">⭐</span>
+                <span id="harita-puan" class="puan-deger">0</span>
+            </div>
+            <button class="harita-konum-btn" onclick="konumaMerkezle()" title="Konumuma git">📍</button>
+        </div>
+        <div id="harita-container"></div>
+    </div>
+
+    <!-- ==================== MEKAN DETAY (BOTTOM SHEET) ==================== -->
+    <div id="ekran-mekan-detay" class="alt-sayfa gizli">
+        <div class="alt-sayfa-tutamak"></div>
+        <img id="mekan-foto" class="mekan-foto gizli" src="" alt="Mekan">
+        <h2 id="mekan-baslik" class="mekan-baslik"></h2>
+        <p id="mekan-aciklama" class="mekan-aciklama"></p>
+
+        <div class="mekan-bilgi-grid">
+            <div class="mekan-bilgi-item">
+                <div id="mekan-zorluk" class="bilgi-deger">🟡</div>
+                <div class="bilgi-etiket">Zorluk</div>
+            </div>
+            <div class="mekan-bilgi-item">
+                <div id="mekan-soru-sayisi" class="bilgi-deger">0</div>
+                <div class="bilgi-etiket">Soru</div>
+            </div>
+            <div class="mekan-bilgi-item">
+                <div id="mekan-aktif-oyuncu" class="bilgi-deger">0</div>
+                <div class="bilgi-etiket">Oyuncu</div>
+            </div>
+        </div>
+
+        <div id="mekan-mesafe-bilgi" class="mekan-mesafe-uyari uzak"></div>
+
+        <div style="display: flex; gap: 12px;">
+            <button id="mekan-oyun-btn" class="btn btn-gold btn-block" onclick="quizBaslat(mevcutMekanId)" disabled>
+                🎮 Oyuna Gir
+            </button>
+            <button class="btn btn-outline" onclick="navigasyonBaslat(mevcutMekanLat, mevcutMekanLng)" style="flex-shrink: 0;">
+                🧭
+            </button>
+        </div>
+
+        <div style="margin-top: 16px;">
+            <button class="btn btn-blue btn-block btn-sm" onclick="birlikteOynaEkraninaGit(mevcutMekanId)">
+                👥 Birlikte Oyna
+            </button>
+        </div>
+
+        <button class="btn btn-sm" onclick="mekanDetayKapat()" style="margin-top: 12px; width: 100%; background: var(--bg-primary); color: var(--text-dim);">
+            Kapat
+        </button>
+    </div>
+
+    <!-- ==================== QUIZ ==================== -->
+    <div id="ekran-quiz" class="ekran gizli">
+        <div class="quiz-ust-bar">
+            <span id="quiz-soru-no" class="quiz-soru-no">1 / 10</span>
+            <span id="quiz-zamanlayici" class="quiz-zamanlayici">⏱️ <span id="quiz-sure">15</span></span>
+            <span id="quiz-puan" class="quiz-puan-bar">⭐ 0</span>
+        </div>
+
+        <div class="quiz-ilerleme">
+            <div id="quiz-ilerleme-bar" class="quiz-ilerleme-dolgu" style="width: 10%"></div>
+        </div>
+
+        <div id="quiz-mesafe-uyari-alani"></div>
+
+        <h3 id="quiz-soru-metin" class="quiz-soru-metin"></h3>
+        <img id="quiz-soru-gorsel" class="quiz-soru-gorsel gizli" src="" alt="Soru görseli">
+
+        <div id="quiz-secenekler" class="quiz-secenekler"></div>
+
+        <div id="quiz-aciklama" class="quiz-aciklama gizli"></div>
+    </div>
+
+    <!-- ==================== ÇARK ==================== -->
+    <div id="ekran-cark" class="ekran gizli">
+        <h2 class="cark-baslik">🎡 Şans Çarkı</h2>
+        <p class="cark-ham-puan">Ham Puanın: <span id="cark-ham-puan-deger">0</span></p>
+
+        <div class="cark-wrapper">
+            <div class="cark-ok">▼</div>
+            <canvas id="cark-canvas" class="cark-canvas" width="280" height="280"></canvas>
+            <button id="cark-cevir-btn" class="cark-cevir-btn" onclick="carkiCevir()">ÇEVİR</button>
+        </div>
+
+        <p id="cark-sonuc" class="cark-sonuc gizli"></p>
+
+        <button id="cark-devam-btn" class="btn btn-gold btn-lg gizli" onclick="carkSonucuDevam()">
+            Devam Et →
+        </button>
+    </div>
+
+    <!-- ==================== SONUÇ ==================== -->
+    <div id="ekran-sonuc" class="ekran gizli">
+        <div id="sonuc-emoji" class="sonuc-emoji">🎉</div>
+        <h2 id="sonuc-baslik" class="sonuc-baslik">Tebrikler!</h2>
+        <div id="sonuc-puan" class="sonuc-puan">+0</div>
+
+        <div class="sonuc-detay">
+            <div class="sonuc-detay-item">
+                <div id="sonuc-dogru" class="detay-deger" style="color: var(--green);">0</div>
+                <div class="detay-etiket">Doğru</div>
+            </div>
+            <div class="sonuc-detay-item">
+                <div id="sonuc-yanlis" class="detay-deger" style="color: var(--red);">0</div>
+                <div class="detay-etiket">Yanlış</div>
+            </div>
+            <div class="sonuc-detay-item">
+                <div id="sonuc-carpan" class="detay-deger" style="color: var(--gold);">1x</div>
+                <div class="detay-etiket">Çark</div>
+            </div>
+            <div class="sonuc-detay-item">
+                <div id="sonuc-birlikte" class="detay-deger" style="color: var(--blue);">1x</div>
+                <div class="detay-etiket">Birlikte</div>
+            </div>
+        </div>
+
+        <div class="sonuc-butonlar">
+            <button class="btn btn-gold btn-block" onclick="ekranGoster('ekran-harita')">🗺️ Haritaya Dön</button>
+            <button class="btn btn-outline btn-block" onclick="ekranGoster('ekran-oduller')">🎁 Ödüllere Göz At</button>
+        </div>
+    </div>
+
+    <!-- ==================== BİRLİKTE OYNA ==================== -->
+    <div id="ekran-birlikte-oyna" class="ekran gizli">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h2 class="sayfa-baslik" style="margin-bottom: 0;">👥 Birlikte Oyna</h2>
+            <button id="eslestirme-toggle-btn" class="btn btn-sm btn-outline" onclick="birlikteOynaToggle()">
+                📡 Görünür Ol
+            </button>
+        </div>
+        <p class="sayfa-alt-baslik">Yakınındaki oyuncuları bul ve birlikte oyna!</p>
+
+        <div id="yakin-oyuncular" class="oyuncu-listesi">
+            <p style="text-align: center; color: var(--text-muted); padding: 32px 0;">Yakınında henüz oyuncu yok</p>
+        </div>
+    </div>
+
+    <!-- ==================== SOHBET ==================== -->
+    <div id="ekran-sohbet" class="ekran gizli">
+        <div class="sohbet-ust">
+            <button class="geri-btn" onclick="sohbettenCik()">←</button>
+            <img id="sohbet-partner-foto" class="avatar avatar-sm" src="" alt="">
+            <div class="sohbet-ust-bilgi">
+                <div id="sohbet-partner-ad" class="partner-ad"></div>
+                <div id="sohbet-partner-mesafe" class="partner-mesafe"></div>
+            </div>
+            <button class="sohbet-nav-btn" onclick="partnerNavigasyonBaslat()">🧭 Navigasyon</button>
+        </div>
+
+        <div id="sohbet-mesajlar" class="sohbet-mesajlar"></div>
+
+        <div id="sohbet-bulusma-bar" class="sohbet-bulusma-bar gizli">
+            <button id="bulusma-btn" class="btn btn-green btn-block" onclick="bulustukOnayla()" disabled>
+                🤝 Buluştuk!
+            </button>
+            <p id="bulusma-mesafe-metin" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;"></p>
+        </div>
+
+        <div class="sohbet-alt">
+            <input type="text" id="sohbet-input" class="sohbet-input" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') mesajGonderUI()">
+            <button class="sohbet-gonder-btn" onclick="mesajGonderUI()">➤</button>
+        </div>
+    </div>
+
+    <!-- ==================== TAŞ KAĞIT MAKAS ==================== -->
+    <div id="ekran-tas-kagit-makas" class="ekran gizli">
+        <h2 class="sayfa-baslik">✊✋✌️ Taş Kağıt Makas</h2>
+        <p style="color: var(--text-dim); margin-top: -12px;">Kazanan quiz'i kendi telefonundan yönetir!</p>
+
+        <div class="rps-arena">
+            <div class="rps-oyuncu">
+                <img id="rps-oyuncu1-foto" class="avatar" src="" alt="">
+                <span id="rps-oyuncu1-ad" style="font-size: 0.8rem;"></span>
+                <div id="rps-oyuncu1-el" class="rps-el">✊</div>
+            </div>
+            <span class="rps-vs">VS</span>
+            <div class="rps-oyuncu">
+                <img id="rps-oyuncu2-foto" class="avatar" src="" alt="">
+                <span id="rps-oyuncu2-ad" style="font-size: 0.8rem;"></span>
+                <div id="rps-oyuncu2-el" class="rps-el">✊</div>
+            </div>
+        </div>
+
+        <div id="rps-geri-sayim" class="rps-geri-sayim gizli"></div>
+        <p id="rps-sonuc-metin" class="rps-sonuc-metin gizli"></p>
+
+        <button id="rps-baslat-btn" class="btn btn-gold btn-lg" onclick="tasKagitMakasOynat()">
+            🎲 Başlat!
+        </button>
+
+        <button id="rps-quiz-btn" class="btn btn-green btn-lg gizli" onclick="birlikteQuizBaslatUI()">
+            🎮 Quiz'e Geç (2x Puan!)
+        </button>
+    </div>
+
+    <!-- ==================== ÖDÜLLER ==================== -->
+    <div id="ekran-oduller" class="ekran gizli">
+        <h2 class="sayfa-baslik">🎁 Ödüller</h2>
+
+        <div id="odul-filtre-bar" class="odul-filtre-bar">
+            <div class="filtre-chip aktif" data-kategori="tumu" onclick="odulFiltrele('tumu', this)">Tümü</div>
+            <div class="filtre-chip" data-kategori="drink" onclick="odulFiltrele('drink', this)">☕ İçecek</div>
+            <div class="filtre-chip" data-kategori="food" onclick="odulFiltrele('food', this)">🍕 Yemek</div>
+            <div class="filtre-chip" data-kategori="shopping" onclick="odulFiltrele('shopping', this)">🛍️ Alışveriş</div>
+            <div class="filtre-chip" data-kategori="experience" onclick="odulFiltrele('experience', this)">🎭 Deneyim</div>
+        </div>
+
+        <div id="odul-listesi-container" class="odul-listesi"></div>
+
+        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <button class="btn btn-outline btn-block btn-sm" onclick="kuponlarimGoster()">
+                🎟️ Kuponlarım
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== QR KUPON ==================== -->
+    <div id="ekran-qr-kupon" class="ekran gizli">
+        <h2 class="sayfa-baslik">🎟️ Kuponun</h2>
+
+        <div id="kupon-durum-badge" class="kupon-durum bekliyor">Onay Bekliyor</div>
+
+        <div id="qr-container" class="qr-container"></div>
+
+        <div id="kupon-kod" class="kupon-kod"></div>
+
+        <div style="width: 100%; max-width: 320px;">
+            <h3 id="kupon-odul-baslik" style="margin-bottom: 4px;"></h3>
+            <p id="kupon-isletme-ad" style="font-size: 0.875rem; color: var(--text-dim);"></p>
+            <p id="kupon-aciklama" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;"></p>
+        </div>
+
+        <button id="kupon-nav-btn" class="btn btn-blue btn-block" onclick="kuponIsletmeyeGit()" style="max-width: 320px;">
+            🧭 İşletmeye Git
+        </button>
+
+        <button class="btn btn-outline btn-block btn-sm" onclick="ekranGoster('ekran-oduller')" style="max-width: 320px;">
+            ← Ödüllere Dön
+        </button>
+    </div>
+
+    <!-- ==================== PROFİLİM ==================== -->
+    <div id="ekran-profil" class="ekran gizli">
+        <div class="profil-header">
+            <div class="profil-foto-degistir" onclick="document.getElementById('profil-foto-duzenle-file').click()">
+                <img id="profil-foto" class="avatar avatar-xl" src="" alt="Profil">
+            </div>
+            <input type="file" id="profil-foto-duzenle-file" class="profil-foto-input" accept="image/*" onchange="fotoSecildiDuzenle(event)">
+            <h2 id="profil-ad" class="profil-ad"></h2>
+            <span id="profil-email" class="profil-email"></span>
+            <span id="profil-seviye" class="profil-seviye badge badge-gold"></span>
+        </div>
+
+        <div class="profil-istatistikler">
+            <div class="istatistik-kart">
+                <div id="profil-toplam-puan" class="ist-deger">0</div>
+                <div class="ist-etiket">Toplam Puan</div>
+            </div>
+            <div class="istatistik-kart">
+                <div id="profil-oyun-sayisi" class="ist-deger">0</div>
+                <div class="ist-etiket">Oyun</div>
+            </div>
+            <div class="istatistik-kart">
+                <div id="profil-odul-sayisi" class="ist-deger">0</div>
+                <div class="ist-etiket">Ödül</div>
+            </div>
+            <div class="istatistik-kart">
+                <div id="profil-xp-seviye" class="ist-deger">1</div>
+                <div class="ist-etiket">Seviye</div>
+            </div>
+        </div>
+
+        <div id="profil-rozetler-alani" class="profil-rozetler">
+            <h3>🏅 Rozetler</h3>
+            <div id="rozet-grid" class="rozet-grid">
+                <span style="color: var(--text-muted); font-size: 0.875rem;">Henüz rozet yok</span>
+            </div>
+        </div>
+
+        <div class="profil-menu">
+            <div class="profil-menu-item" onclick="profilDuzenle()">
+                <span class="menu-ikon">✏️</span>
+                <span class="menu-metin">Profili Düzenle</span>
+                <span class="menu-ok">›</span>
+            </div>
+            <div class="profil-menu-item" onclick="kuponlarimGoster()">
+                <span class="menu-ikon">🎟️</span>
+                <span class="menu-metin">Kuponlarım</span>
+                <span class="menu-ok">›</span>
+            </div>
+            <div class="profil-menu-item" onclick="cikisYap()" style="border-color: rgba(239,68,68,0.3);">
+                <span class="menu-ikon">🚪</span>
+                <span class="menu-metin" style="color: var(--red);">Çıkış Yap</span>
+                <span class="menu-ok" style="color: var(--red);">›</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SIRALAMA ==================== -->
+    <div id="ekran-siralama" class="ekran gizli">
+        <h2 class="sayfa-baslik">🏆 Sıralama</h2>
+
+        <div class="siralama-tab-bar">
+            <button class="siralama-tab aktif" onclick="siralamaTabDegistir('genel', this)">Genel</button>
+            <button class="siralama-tab" onclick="siralamaTabDegistir('haftalik', this)">Haftalık</button>
+        </div>
+
+        <div id="siralama-ilk3" class="siralama-ilk3"></div>
+        <div id="siralama-listesi" class="siralama-listesi"></div>
+    </div>
+
+    <!-- ==================== SABİT ALT MENÜ ==================== -->
+    <nav id="alt-menu" class="gizli">
+        <button id="menu-harita" onclick="menuTikla('ekran-harita', this)">
+            <span class="menu-ikon">🗺️</span>
+            Harita
+        </button>
+        <button id="menu-siralama" onclick="menuTikla('ekran-siralama', this)">
+            <span class="menu-ikon">🏆</span>
+            Sıralama
+        </button>
+        <button id="menu-oduller" onclick="menuTikla('ekran-oduller', this)">
+            <span class="menu-ikon">🎁</span>
+            Ödüller
+        </button>
+        <button id="menu-profil" onclick="menuTikla('ekran-profil', this)">
+            <span class="menu-ikon">👤</span>
+            Profil
+        </button>
+    </nav>
+
+    <!-- ==================== BİLDİRİM ==================== -->
+    <div id="bildirim"></div>
+
+    <!-- ==================== DAVET POPUP ==================== -->
+    <div id="davet-popup" class="popup gizli">
+        <div class="popup-icerik">
+            <img id="davet-foto" class="avatar avatar-lg popup-foto" src="" alt="">
+            <h3 id="davet-baslik" class="popup-baslik"></h3>
+            <p id="davet-aciklama" class="popup-aciklama"></p>
+            <div class="popup-butonlar">
+                <button class="btn btn-red" onclick="davetiReddetUI()">Reddet</button>
+                <button class="btn btn-green" onclick="davetiKabulEtUI()">Kabul Et</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL ==================== -->
+    <div id="modal-overlay" class="gizli" onclick="event.target===this && modalKapat()">
+        <div id="modal-icerik">
+            <button class="modal-kapat" onclick="modalKapat()">✕</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- ==================== LİGHTBOX ==================== -->
+    <div id="lightbox" class="gizli" onclick="lightboxKapat()">
+        <img id="lightbox-img" src="" alt="Büyük fotoğraf">
+    </div>
+
+    <!-- ==================== YÜKLEME ==================== -->
+    <div id="yukleme-overlay" class="gizli">
+        <div class="spinner"></div>
+        <span class="yukleme-metin">Yükleniyor...</span>
+    </div>
+
+    <!-- ==================== HARİCİ KAYNAKLAR ==================== -->
+
+    <!-- Firebase SDK (compat sürüm — global firebase nesnesi oluşturur) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <!-- Google Maps -->
+     <script src="mygma.js"></script>
+    <!-- <script src="https://maps.googleapis.com/maps/api/js?key=BURAYA_API_KEY&libraries=geometry&callback=haritaHazir" async defer></script> -->
+
+    <!-- QR Kod üretici -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- Proje JS dosyaları (SIRAYLA) -->
+    <script src="github-parametreleri.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="database.js"></script>
+    <script src="github-storage.js"></script>
+    <script src="ui.js"></script>
+    <script src="profile.js"></script>
+    <script src="map.js"></script>
+    <script src="quiz.js"></script>
+    <script src="spin-wheel.js"></script>
+    <script src="multiplayer.js"></script>
+    <script src="rewards.js"></script>
+    <script src="leaderboard.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>

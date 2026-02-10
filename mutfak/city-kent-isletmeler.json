@@ -1,0 +1,12 @@
+{
+  "isletmeler": [
+    {"id":"biz-detling-01","name":"The Cock Horse Inn","description":"Detling köyünde geleneksel İngiliz pub. Sıcak yemekler ve yerel biralar sunar.","address":"Pilgrims Way, Detling, Maidstone ME14 3HQ","latitude":51.3748,"longitude":0.5275,"phone":"","website":"","logoURL":"","isActive":true},
+    {"id":"biz-detling-02","name":"Kent Showground Café","description":"Kent County Showground içindeki kafe. Etkinlik günlerinde açıktır.","address":"Kent County Showground, Detling, Maidstone ME14 3JF","latitude":51.3770,"longitude":0.5310,"phone":"","website":"","logoURL":"","isActive":true},
+    {"id":"biz-detling-03","name":"Detling Village Store","description":"Detling köyündeki bakkal ve hediyelik eşya dükkanı.","address":"Detling Hill, Detling, Maidstone ME14 3HU","latitude":51.3752,"longitude":0.5290,"phone":"","website":"","logoURL":"","isActive":true}
+  ],
+  "oduller": [
+    {"id":"reward-detling-01","title":"Ücretsiz Pint Bira","description":"The Cock Horse Inn'de bir adet yerel bira ikramı.","category":"drink","type":"free","requiredPoints":0,"promoRadius":500,"businessId":"biz-detling-01","businessName":"The Cock Horse Inn","businessLogo":"","photoURL":"","latitude":51.3748,"longitude":0.5275,"isActive":true},
+    {"id":"reward-detling-02","title":"Sıcak İçecek & Pasta","description":"Kent Showground Café'de bir sıcak içecek ve bir dilim pasta.","category":"food","type":"free","requiredPoints":0,"promoRadius":300,"businessId":"biz-detling-02","businessName":"Kent Showground Café","businessLogo":"","photoURL":"","latitude":51.3770,"longitude":0.5310,"isActive":true},
+    {"id":"reward-detling-03","title":"Hediyelik Kent Anahtarlık","description":"Detling Village Store'dan Kent sembolü beyaz at anahtarlık.","category":"shopping","type":"points","requiredPoints":300,"promoRadius":0,"businessId":"biz-detling-03","businessName":"Detling Village Store","businessLogo":"","photoURL":"","latitude":51.3752,"longitude":0.5290,"isActive":true}
+  ]
+}

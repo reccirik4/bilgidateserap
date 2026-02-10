@@ -1,0 +1,22 @@
+{
+  "cityId": "kent",
+  "cityName": "Kent",
+  "locations": [
+    {
+      "id": "detling-kent-test",
+      "name": "Detling Kent (Test)",
+      "description": "Kent'in Maidstone ilçesine bağlı Detling köyü. Kent County Showground'a ev sahipliği yapar. Pilgrim's Way antik yolu buradan geçer. Roma ve Sakson döneminden kalıntılar barındırır.",
+      "questionsFile": "questions-detling-kent-test.json",
+      "latitude": 51.3755095,
+      "longitude": 0.5286293,
+      "address": "Detling, Maidstone, Kent ME14 3HU",
+      "difficulty": "easy",
+      "questionCount": 8,
+      "entryRadius": 1000,
+      "exitRadius": 2000,
+      "photoURL": "",
+      "isActive": true,
+      "category": "history"
+    }
+  ]
+}

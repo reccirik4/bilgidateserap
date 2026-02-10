@@ -1,9 +1,10 @@
 // ============================================================
 // REWARDS.JS
 // Museum Quest — Ödül listesi, QR kupon, navigasyon, işletme onayı
+// v2.0 — Lazy loading işletme/ödül desteği
 // Bağımlılıklar: auth.js (mevcutKullanici, kullaniciBilgileri)
 //                database.js (oduluKullan, kuponlarimOku, kuponGuncelle, puanDus, kullaniciProfilGuncelle)
-//                github-storage.js (window.odulListesi, window.isletmeListesi)
+//                github-storage.js (window.odulListesi, window.isletmeListesi, sehirIsletmeleriniYukle)
 //                map.js (mevcutKonum, mesafeHesapla, navigasyonBaslat)
 //                ui.js (ekranGoster, bildirimGoster, formatPuan, formatMesafe, onayIste,
 //                       htmlEscape, rastgeleKarakter, modalGoster, varsayilanFoto, formatTarih)
@@ -23,13 +24,19 @@ var bildirilenPuanOduller = {};        // session boyunca bildirilen puan ödül
 var proximityPopupAcik = false;        // aynı anda birden fazla popup önleme
 
 // ──────────────────────────────────────────────
-// ÖDÜLLERİ GÖSTER
+// ÖDÜLLERİ GÖSTER (v2.0 — async + lazy load)
 // ──────────────────────────────────────────────
-function odulleriGoster() {
+async function odulleriGoster() {
     console.log("[rewards.js] Ödüller gösteriliyor. Filtre:", aktifOdulFiltre);
 
     var container = document.getElementById('odul-listesi-container');
     if (!container) return;
+
+    // v2.0 — İşletmeler/ödüller henüz yüklenmemişse lazy load et
+    if (!window.isletmelerYuklendi) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:32px 0;">⏳ Ödüller yükleniyor...</p>';
+        await sehirIsletmeleriniYukle();
+    }
 
     var oduller = window.odulListesi || [];
 
@@ -535,6 +542,7 @@ async function kuponDetayGoster(kuponKey) {
 
 // ──────────────────────────────────────────────
 // PROXIMITY ÖDÜL KONTROLÜ (map.js konumGuncelle'den çağrılır)
+// v2.0 — İşletmeler yüklenmemişse async lazy load tetikle
 // ──────────────────────────────────────────────
 function proximityOdulKontrol() {
     // Konum yoksa çık
@@ -542,6 +550,24 @@ function proximityOdulKontrol() {
     // Kullanıcı giriş yapmamışsa çık
     if (!mevcutKullanici || !kullaniciBilgileri) return;
     // Popup zaten açıksa çık
+    if (proximityPopupAcik) return;
+
+    // v2.0 — İşletmeler henüz yüklenmemişse arka planda yükle
+    if (!window.isletmelerYuklendi) {
+        sehirIsletmeleriniYukle().then(function() {
+            // Yüklendikten sonra tekrar kontrol et
+            proximityOdulKontrolIslemi();
+        });
+        return;
+    }
+
+    proximityOdulKontrolIslemi();
+}
+
+// Proximity kontrol asıl işlemi (ayrılmış — async sonrası da çağrılabilir)
+function proximityOdulKontrolIslemi() {
+    if (!mevcutKonum.lat || !mevcutKonum.lng) return;
+    if (!mevcutKullanici || !kullaniciBilgileri) return;
     if (proximityPopupAcik) return;
 
     var oduller = window.odulListesi || [];
@@ -614,6 +640,10 @@ function puanEsigiOdulKontrol(eskiPuan, yeniPuan) {
     // Popup açıksa çık
     if (proximityPopupAcik) return;
 
+    // v2.0 — İşletmeler yüklenmemişse bu kontrolü atla
+    // (Ödüller zaten yüklenmeden puan eşiği kontrolü anlamsız)
+    if (!window.isletmelerYuklendi) return;
+
     var oduller = window.odulListesi || [];
 
     for (var i = 0; i < oduller.length; i++) {
@@ -671,4 +701,4 @@ function puanEsigiPopupGoster(odul) {
     modalGoster(html);
 }
 
-console.log("[rewards.js] Rewards modülü yüklendi.");
+console.log("[rewards.js] Rewards modülü yüklendi. (v2.0 — Lazy Loading)");

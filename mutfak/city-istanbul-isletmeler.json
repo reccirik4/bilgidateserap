@@ -1,0 +1,12 @@
+{
+  "isletmeler": [
+    {"id":"biz_001","name":"Kahve Dünyası","description":"Sultanahmet'te popüler Türk kahve zinciri.","address":"Sultanahmet Mah. No:12","latitude":41.0120,"longitude":28.9840,"phone":"0212 555 1234","website":"","logoURL":"","isActive":true},
+    {"id":"biz_002","name":"Tarihi Sultanahmet Köftecisi","description":"1920'den beri hizmet veren ünlü köfteci.","address":"Sultanahmet Mah. Divanyolu Cad. No:12","latitude":41.0070,"longitude":28.9760,"phone":"0212 520 0566","website":"","logoURL":"","isActive":true},
+    {"id":"biz_003","name":"Grand Bazaar Hediyelik","description":"Kapalıçarşı'da hediyelik eşya dükkanı.","address":"Kapalıçarşı, Fatih","latitude":41.0107,"longitude":28.9681,"phone":"0212 555 5678","website":"","logoURL":"","isActive":true}
+  ],
+  "oduller": [
+    {"id":"reward_001","title":"%25 indirimli kahve","description":"Tüm sıcak içeceklerde geçerli","category":"drink","type":"points","requiredPoints":2000,"promoRadius":0,"businessId":"biz_001","businessName":"Kahve Dünyası","businessLogo":"","photoURL":"","latitude":41.0120,"longitude":28.9840,"isActive":true},
+    {"id":"reward_002","title":"1 porsiyon ücretsiz köfte","description":"Ana menüden 1 porsiyon köfte hediye","category":"food","type":"points","requiredPoints":5000,"promoRadius":0,"businessId":"biz_002","businessName":"Tarihi Sultanahmet Köftecisi","businessLogo":"","photoURL":"","latitude":41.0070,"longitude":28.9760,"isActive":true},
+    {"id":"reward_003","title":"%30 indirim","description":"Tüm hediyelik eşyalarda geçerli","category":"shopping","type":"points","requiredPoints":3000,"promoRadius":0,"businessId":"biz_003","businessName":"Grand Bazaar Hediyelik","businessLogo":"","photoURL":"","latitude":41.0107,"longitude":28.9681,"isActive":true}
+  ]
+}

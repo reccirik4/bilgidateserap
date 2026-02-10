@@ -1,0 +1,36 @@
+{
+  "version": "2.0",
+  "description": "Museum Quest — Modüler şehir bazlı veri indeksi",
+  "cities": [
+    {
+      "id": "london",
+      "name": "London",
+      "file": "city-london.json",
+      "isletmelerFile": "city-london-isletmeler.json",
+      "locationCount": 2,
+      "center": { "lat": 51.5074, "lng": -0.1278 },
+      "zoom": 13,
+      "isActive": true
+    },
+    {
+      "id": "kent",
+      "name": "Kent",
+      "file": "city-kent.json",
+      "isletmelerFile": "city-kent-isletmeler.json",
+      "locationCount": 1,
+      "center": { "lat": 51.3755, "lng": 0.5286 },
+      "zoom": 13,
+      "isActive": true
+    },
+    {
+      "id": "istanbul",
+      "name": "İstanbul",
+      "file": "city-istanbul.json",
+      "isletmelerFile": "city-istanbul-isletmeler.json",
+      "locationCount": 5,
+      "center": { "lat": 41.0082, "lng": 28.9784 },
+      "zoom": 14,
+      "isActive": true
+    }
+  ]
+}

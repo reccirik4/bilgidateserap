@@ -1,0 +1,4 @@
+[
+  {"id":"q_101","text":"Ayasofya ilk olarak hangi yılda ibadete açılmıştır?","options":[{"text":"537","correct":true},{"text":"532","correct":false},{"text":"550","correct":false},{"text":"527","correct":false}],"points":25,"timeLimit":15,"explanation":"Ayasofya, 537 yılında Justinianus döneminde ibadete açılmıştır.","imageURL":""},
+  {"id":"q_102","text":"Ayasofya'yı yaptıran Bizans imparatoru kimdir?","options":[{"text":"I. Justinianus","correct":true},{"text":"Konstantin","correct":false},{"text":"Theodosius","correct":false},{"text":"II. Mehmed","correct":false}],"points":10,"timeLimit":15,"explanation":"Ayasofya, I. Justinianus tarafından yaptırılmıştır.","imageURL":""}
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "bm-01",
+    "text": "Rosetta Taşı hangi yılda keşfedildi?",
+    "options": [
+      { "text": "1799", "correct": true },
+      { "text": "1802", "correct": false },
+      { "text": "1753", "correct": false },
+      { "text": "1822", "correct": false }
+    ],
+    "points": 25,
+    "timeLimit": 15,
+    "explanation": "Rosetta Taşı, 1799'da Napolyon'un Mısır seferinde Fransız askerler tarafından Reşid (Rosetta) kasabasında bulundu.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-02",
+    "text": "Rosetta Taşı'nda kaç farklı yazı sistemi bulunur?",
+    "options": [
+      { "text": "3", "correct": true },
+      { "text": "2", "correct": false },
+      { "text": "4", "correct": false },
+      { "text": "1", "correct": false }
+    ],
+    "points": 10,
+    "timeLimit": 15,
+    "explanation": "Taşta üç yazı sistemi vardır: Hiyeroglif (14 satır), Demotik (32 satır) ve Antik Yunanca (53 satır).",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-03",
+    "text": "Rosetta Taşı üzerindeki yazılar hangi yılda kazınmıştır?",
+    "options": [
+      { "text": "MÖ 196", "correct": true },
+      { "text": "MÖ 332", "correct": false },
+      { "text": "MÖ 50", "correct": false },
+      { "text": "MÖ 500", "correct": false }
+    ],
+    "points": 50,
+    "timeLimit": 15,
+    "explanation": "Yazıtlar MÖ 196'da, genç firavun V. Ptolemaios'un taç giyme töreninin birinci yıldönümünde kazınmıştır.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-04",
+    "text": "British Museum hangi yılda kurulmuştur?",
+    "options": [
+      { "text": "1753", "correct": true },
+      { "text": "1802", "correct": false },
+      { "text": "1881", "correct": false },
+      { "text": "1700", "correct": false }
+    ],
+    "points": 25,
+    "timeLimit": 15,
+    "explanation": "British Museum, 1753'te bilim insanı ve koleksiyoncu Sir Hans Sloane'un koleksiyonuyla kuruldu. Dünyanın ilk ulusal halka açık müzesidir.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-05",
+    "text": "Hiyeroglifleri çözen Fransız bilim insanı kimdir?",
+    "options": [
+      { "text": "Jean-François Champollion", "correct": true },
+      { "text": "Thomas Young", "correct": false },
+      { "text": "Napoleon Bonaparte", "correct": false },
+      { "text": "Howard Carter", "correct": false }
+    ],
+    "points": 25,
+    "timeLimit": 15,
+    "explanation": "Champollion, 1822'de hiyerogliflerin sadece sembolik değil aynı zamanda fonetik olduğunu keşfederek kodlarını çözdü.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-06",
+    "text": "British Museum'un en çok ziyaret edilen tekil eseri hangisidir?",
+    "options": [
+      { "text": "Rosetta Taşı", "correct": true },
+      { "text": "Elgin Mermerleri", "correct": false },
+      { "text": "II. Ramses Büstü", "correct": false },
+      { "text": "Lewis Satranç Taşları", "correct": false }
+    ],
+    "points": 10,
+    "timeLimit": 15,
+    "explanation": "Müzenin kayıtlarına göre Rosetta Taşı en çok ziyaret edilen tekil eserdir ve onlarca yıl boyunca en çok satan kartpostal da Rosetta Taşı görseli olmuştur.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-07",
+    "text": "I. Dünya Savaşı sırasında Rosetta Taşı nereye saklandı?",
+    "options": [
+      { "text": "Londra metro tünellerine", "correct": true },
+      { "text": "Oxford Üniversitesi'ne", "correct": false },
+      { "text": "Buckingham Sarayı'na", "correct": false },
+      { "text": "İskoçya'ya", "correct": false }
+    ],
+    "points": 50,
+    "timeLimit": 15,
+    "explanation": "1917'de taş, Holborn yakınlarındaki bir posta tüp demiryolu istasyonunda, yerin 15 metre altında 2 yıl boyunca saklandı.",
+    "imageURL": ""
+  },
+  {
+    "id": "bm-08",
+    "text": "British Museum koleksiyonunda yaklaşık kaç eser vardır?",
+    "options": [
+      { "text": "8 milyon", "correct": true },
+      { "text": "2 milyon", "correct": false },
+      { "text": "15 milyon", "correct": false },
+      { "text": "500 bin", "correct": false }
+    ],
+    "points": 25,
+    "timeLimit": 15,
+    "explanation": "British Museum koleksiyonu 8 milyondan fazla eserden oluşur ve insanlık tarihinin başlangıcından günümüze kadarki kültürel mirası kapsar.",
+    "imageURL": ""
+  }
+]
