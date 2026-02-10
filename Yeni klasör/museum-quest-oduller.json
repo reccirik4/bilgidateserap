@@ -1,0 +1,72 @@
+[
+  {
+    "id": "reward-london-01",
+    "title": "Ücretsiz Flat White",
+    "description": "British Museum yakınındaki Store Street Espresso'da geçerli bir adet flat white.",
+    "category": "drink",
+    "requiredPoints": 500,
+    "businessId": "biz-london-01",
+    "businessName": "Store Street Espresso",
+    "businessLogo": "",
+    "photoURL": "",
+    "latitude": 51.5195,
+    "longitude": -0.1293,
+    "isActive": true
+  },
+  {
+    "id": "reward-london-02",
+    "title": "%20 Yemek İndirimi",
+    "description": "South Kensington'daki Comptoir Libanais'de tek sefere mahsus %20 indirim.",
+    "category": "food",
+    "requiredPoints": 1200,
+    "businessId": "biz-london-02",
+    "businessName": "Comptoir Libanais",
+    "businessLogo": "",
+    "photoURL": "",
+    "latitude": 51.4949,
+    "longitude": -0.1741,
+    "isActive": true
+  },
+  {
+    "id": "reward-london-03",
+    "title": "Hediyelik Mıknatıs",
+    "description": "Natural History Museum Gift Shop'tan seçeceğin bir buzdolabı mıknatısı.",
+    "category": "shopping",
+    "requiredPoints": 800,
+    "businessId": "biz-london-03",
+    "businessName": "NHM Gift Shop",
+    "businessLogo": "",
+    "photoURL": "",
+    "latitude": 51.4960,
+    "longitude": -0.1764,
+    "isActive": true
+  },
+  {
+    "id": "reward-london-04",
+    "title": "Müze Turu Bileti",
+    "description": "British Museum'da rehberli tur bileti (normalde £15 değerinde).",
+    "category": "experience",
+    "requiredPoints": 3000,
+    "businessId": "biz-london-04",
+    "businessName": "British Museum Tours",
+    "businessLogo": "",
+    "photoURL": "",
+    "latitude": 51.5187,
+    "longitude": -0.1261,
+    "isActive": true
+  },
+  {
+    "id": "reward-london-05",
+    "title": "Ücretsiz Çay & Kek",
+    "description": "V&A Café'de bir çay ve bir dilim kek hediye.",
+    "category": "drink",
+    "requiredPoints": 700,
+    "businessId": "biz-london-05",
+    "businessName": "V&A Café",
+    "businessLogo": "",
+    "photoURL": "",
+    "latitude": 51.4966,
+    "longitude": -0.1722,
+    "isActive": true
+  }
+]

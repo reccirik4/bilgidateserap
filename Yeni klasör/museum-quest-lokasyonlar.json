@@ -1,0 +1,32 @@
+[
+  {
+    "id": "british-museum",
+    "name": "British Museum",
+    "description": "1753'te kurulan, 8 milyondan fazla esere ev sahipliği yapan dünyanın en eski ulusal müzesi. Rosetta Taşı, Elgin Mermerleri ve Mısır mumyaları en ünlü eserleri arasında.",
+    "latitude": 51.518757,
+    "longitude": -0.126168,
+    "address": "Great Russell Street, Bloomsbury, London WC1B 3DG",
+    "difficulty": "medium",
+    "questionCount": 8,
+    "entryRadius": 1000,
+    "exitRadius": 2000,
+    "photoURL": "",
+    "isActive": true,
+    "category": "history"
+  },
+  {
+    "id": "natural-history-museum",
+    "name": "Natural History Museum",
+    "description": "1881'de açılan, 80 milyon örneğe sahip doğa tarihi müzesi. Dinozor iskeletleri, mavi balina iskeleti ve Darwin'in koleksiyonları ile ünlü. Giriş ücretsizdir.",
+    "latitude": 51.496727,
+    "longitude": -0.176484,
+    "address": "Cromwell Road, South Kensington, London SW7 5BD",
+    "difficulty": "medium",
+    "questionCount": 8,
+    "entryRadius": 1000,
+    "exitRadius": 2000,
+    "photoURL": "",
+    "isActive": true,
+    "category": "science"
+  }
+]

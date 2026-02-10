@@ -1,0 +1,230 @@
+{
+  "british-museum": [
+    {
+      "id": "bm-01",
+      "text": "Rosetta Taşı hangi yılda keşfedildi?",
+      "options": [
+        { "text": "1799", "correct": true },
+        { "text": "1802", "correct": false },
+        { "text": "1753", "correct": false },
+        { "text": "1822", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Rosetta Taşı, 1799'da Napolyon'un Mısır seferinde Fransız askerler tarafından Reşid (Rosetta) kasabasında bulundu.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-02",
+      "text": "Rosetta Taşı'nda kaç farklı yazı sistemi bulunur?",
+      "options": [
+        { "text": "3", "correct": true },
+        { "text": "2", "correct": false },
+        { "text": "4", "correct": false },
+        { "text": "1", "correct": false }
+      ],
+      "points": 10,
+      "timeLimit": 15,
+      "explanation": "Taşta üç yazı sistemi vardır: Hiyeroglif (14 satır), Demotik (32 satır) ve Antik Yunanca (53 satır).",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-03",
+      "text": "Rosetta Taşı üzerindeki yazılar hangi yılda kazınmıştır?",
+      "options": [
+        { "text": "MÖ 196", "correct": true },
+        { "text": "MÖ 332", "correct": false },
+        { "text": "MÖ 50", "correct": false },
+        { "text": "MÖ 500", "correct": false }
+      ],
+      "points": 50,
+      "timeLimit": 15,
+      "explanation": "Yazıtlar MÖ 196'da, genç firavun V. Ptolemaios'un taç giyme töreninin birinci yıldönümünde kazınmıştır.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-04",
+      "text": "British Museum hangi yılda kurulmuştur?",
+      "options": [
+        { "text": "1753", "correct": true },
+        { "text": "1802", "correct": false },
+        { "text": "1881", "correct": false },
+        { "text": "1700", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "British Museum, 1753'te bilim insanı ve koleksiyoncu Sir Hans Sloane'un koleksiyonuyla kuruldu. Dünyanın ilk ulusal halka açık müzesidir.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-05",
+      "text": "Hiyeroglifleri çözen Fransız bilim insanı kimdir?",
+      "options": [
+        { "text": "Jean-François Champollion", "correct": true },
+        { "text": "Thomas Young", "correct": false },
+        { "text": "Napoleon Bonaparte", "correct": false },
+        { "text": "Howard Carter", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Champollion, 1822'de hiyerogliflerin sadece sembolik değil aynı zamanda fonetik olduğunu keşfederek kodlarını çözdü.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-06",
+      "text": "British Museum'un en çok ziyaret edilen tekil eseri hangisidir?",
+      "options": [
+        { "text": "Rosetta Taşı", "correct": true },
+        { "text": "Elgin Mermerleri", "correct": false },
+        { "text": "II. Ramses Büstü", "correct": false },
+        { "text": "Lewis Satranç Taşları", "correct": false }
+      ],
+      "points": 10,
+      "timeLimit": 15,
+      "explanation": "Müzenin kayıtlarına göre Rosetta Taşı en çok ziyaret edilen tekil eserdir ve onlarca yıl boyunca en çok satan kartpostal da Rosetta Taşı görseli olmuştur.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-07",
+      "text": "I. Dünya Savaşı sırasında Rosetta Taşı nereye saklandı?",
+      "options": [
+        { "text": "Londra metro tünellerine", "correct": true },
+        { "text": "Oxford Üniversitesi'ne", "correct": false },
+        { "text": "Buckingham Sarayı'na", "correct": false },
+        { "text": "İskoçya'ya", "correct": false }
+      ],
+      "points": 50,
+      "timeLimit": 15,
+      "explanation": "1917'de taş, Holborn yakınlarındaki bir posta tüp demiryolu istasyonunda, yerin 15 metre altında 2 yıl boyunca saklandı.",
+      "imageURL": ""
+    },
+    {
+      "id": "bm-08",
+      "text": "British Museum koleksiyonunda yaklaşık kaç eser vardır?",
+      "options": [
+        { "text": "8 milyon", "correct": true },
+        { "text": "2 milyon", "correct": false },
+        { "text": "15 milyon", "correct": false },
+        { "text": "500 bin", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "British Museum koleksiyonu 8 milyondan fazla eserden oluşur ve insanlık tarihinin başlangıcından günümüze kadarki kültürel mirası kapsar.",
+      "imageURL": ""
+    }
+  ],
+  "natural-history-museum": [
+    {
+      "id": "nhm-01",
+      "text": "Natural History Museum hangi yılda halka açıldı?",
+      "options": [
+        { "text": "1881", "correct": true },
+        { "text": "1753", "correct": false },
+        { "text": "1900", "correct": false },
+        { "text": "1856", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Müze 1881'de South Kensington'da halka açıldı. Alfred Waterhouse tarafından tasarlanan bina 'Doğanın Katedrali' lakabını almıştır.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-02",
+      "text": "'Dinosaur' (dinozor) terimini ilk kez hangi bilim insanı kullanmıştır?",
+      "options": [
+        { "text": "Richard Owen", "correct": true },
+        { "text": "Charles Darwin", "correct": false },
+        { "text": "Mary Anning", "correct": false },
+        { "text": "Gideon Mantell", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Richard Owen, 1842'de Megalosaurus, Iguanodon ve Hylaeosaurus fosillerini inceleyerek 'Dinosauria' terimini ortaya attı.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-03",
+      "text": "2017'de Dippy'nin (Diplodocus) yerini ana salonda hangi hayvanın iskeleti aldı?",
+      "options": [
+        { "text": "Mavi balina", "correct": true },
+        { "text": "T-Rex", "correct": false },
+        { "text": "Mastodon", "correct": false },
+        { "text": "Brontosaurus", "correct": false }
+      ],
+      "points": 10,
+      "timeLimit": 15,
+      "explanation": "26 metre uzunluğundaki Diplodocus kopyası 'Dippy', 2017'de tavandan asılan gerçek bir mavi balina iskeleti ile değiştirildi. Mavi balina, dünyada yaşamış en büyük hayvandır.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-04",
+      "text": "Müzenin koleksiyonunda yaklaşık kaç örnek bulunur?",
+      "options": [
+        { "text": "80 milyon", "correct": true },
+        { "text": "8 milyon", "correct": false },
+        { "text": "20 milyon", "correct": false },
+        { "text": "150 milyon", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Müze; botanik, entomoloji, mineraloji, paleontoloji ve zooloji alanlarında 80 milyondan fazla örneğe ev sahipliği yapar.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-05",
+      "text": "Müzenin 'Sophie' lakaplı ünlü fosili hangi dinozor türüne aittir?",
+      "options": [
+        { "text": "Stegosaurus", "correct": true },
+        { "text": "Triceratops", "correct": false },
+        { "text": "Ankylosaurus", "correct": false },
+        { "text": "Velociraptor", "correct": false }
+      ],
+      "points": 25,
+      "timeLimit": 15,
+      "explanation": "Sophie, 2013'te müzeye kazandırılan dünyanın en eksiksiz Stegosaurus fosilidir.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-06",
+      "text": "Müzenin orijinal koleksiyonu kime aittir?",
+      "options": [
+        { "text": "Sir Hans Sloane", "correct": true },
+        { "text": "Charles Darwin", "correct": false },
+        { "text": "Richard Owen", "correct": false },
+        { "text": "Alfred Waterhouse", "correct": false }
+      ],
+      "points": 50,
+      "timeLimit": 15,
+      "explanation": "Doktor ve botanikçi Sir Hans Sloane (1660-1753), 71.000 parçalık koleksiyonunu devlete bıraktı. Bu koleksiyon hem British Museum'un hem de Natural History Museum'un temelini oluşturdu.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-07",
+      "text": "Müzedeki Archaeopteryx fosili neden önemlidir?",
+      "options": [
+        { "text": "Bilinen en eski kuş fosili", "correct": true },
+        { "text": "En büyük dinozor fosili", "correct": false },
+        { "text": "İlk memeli fosili", "correct": false },
+        { "text": "En eski bitki fosili", "correct": false }
+      ],
+      "points": 50,
+      "timeLimit": 15,
+      "explanation": "Archaeopteryx, keşfedilen ilk örneği olan ve paleontologların bilinen en eski kuş olarak kabul ettiği bir fosil türüdür. Dinozorlarla kuşlar arasındaki evrimsel bağın kanıtıdır.",
+      "imageURL": ""
+    },
+    {
+      "id": "nhm-08",
+      "text": "Müze binasının dış cephesindeki doğu ve batı kanatlarında ne fark vardır?",
+      "options": [
+        { "text": "Doğu: soyu tükenmiş, Batı: yaşayan türler", "correct": true },
+        { "text": "Doğu: deniz, Batı: kara canlıları", "correct": false },
+        { "text": "Doğu: bitkiler, Batı: hayvanlar", "correct": false },
+        { "text": "Hiçbir fark yoktur", "correct": false }
+      ],
+      "points": 100,
+      "timeLimit": 15,
+      "explanation": "Richard Owen'ın direktifiyle doğu kanadı tamamen soyu tükenmiş canlılarla (pterodaktil, kılıç dişli kaplan), batı kanadı ise yaşayan türlerle (kurt, aslan, kanguru) süslenmiştir.",
+      "imageURL": ""
+    }
+  ]
+}

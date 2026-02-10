@@ -1,0 +1,62 @@
+[
+  {
+    "id": "biz-london-01",
+    "name": "Store Street Espresso",
+    "description": "Bloomsbury'de bağımsız specialty coffee dükkanı. British Museum'a 2 dakika yürüme mesafesinde.",
+    "address": "40 Store Street, Bloomsbury, London WC1E 7DB",
+    "latitude": 51.5195,
+    "longitude": -0.1293,
+    "phone": "",
+    "website": "",
+    "logoURL": "",
+    "isActive": true
+  },
+  {
+    "id": "biz-london-02",
+    "name": "Comptoir Libanais",
+    "description": "South Kensington'da Lübnan mutfağı sunan renkli restoran.",
+    "address": "1-5 Exhibition Road, South Kensington, London SW7 2HE",
+    "latitude": 51.4949,
+    "longitude": -0.1741,
+    "phone": "",
+    "website": "",
+    "logoURL": "",
+    "isActive": true
+  },
+  {
+    "id": "biz-london-03",
+    "name": "NHM Gift Shop",
+    "description": "Natural History Museum ana giriş katındaki hediyelik eşya mağazası.",
+    "address": "Cromwell Road, South Kensington, London SW7 5BD",
+    "latitude": 51.4960,
+    "longitude": -0.1764,
+    "phone": "",
+    "website": "",
+    "logoURL": "",
+    "isActive": true
+  },
+  {
+    "id": "biz-london-04",
+    "name": "British Museum Tours",
+    "description": "British Museum resmi rehberli tur hizmeti.",
+    "address": "Great Russell Street, London WC1B 3DG",
+    "latitude": 51.5187,
+    "longitude": -0.1261,
+    "phone": "",
+    "website": "",
+    "logoURL": "",
+    "isActive": true
+  },
+  {
+    "id": "biz-london-05",
+    "name": "V&A Café",
+    "description": "Victoria and Albert Museum içindeki tarihi kafe. 1868'de açılan dünyanın ilk müze restoranı.",
+    "address": "Cromwell Road, London SW7 2RL",
+    "latitude": 51.4966,
+    "longitude": -0.1722,
+    "phone": "",
+    "website": "",
+    "logoURL": "",
+    "isActive": true
+  }
+]
