@@ -53,7 +53,7 @@ function haritaHazir() {
         ekranHarita.classList.remove('gizli');
     }
 
-    // Dünya görünümüyle başlat (tüm lokasyonlar gösterilecek)
+    // Dünya görünümüyle başlat — zoom:3, GPS gelince kullanıcıya merkezlenecek
     harita = new google.maps.Map(haritaContainer, {
         center: { lat: 40, lng: 20 },
         zoom: 3,
@@ -143,7 +143,7 @@ function konumTakibiBaslat() {
     navigator.geolocation.getCurrentPosition(
         function(pos) {
             konumGuncelle(pos);
-            // Haritayı kullanıcıya merkezle
+            // Haritayı kullanıcıya merkezle (zoom değiştirmeden)
             if (harita) {
                 harita.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude });
             }
@@ -276,16 +276,8 @@ function lokasyonlariHaritayaEkle() {
         })(lok, marker);
     }
 
-    // Tüm marker'ları kapsayacak şekilde haritayı otomatik yakınlaştır
-    var markerKeys = Object.keys(lokasyonMarkerlar);
-    if (markerKeys.length > 0) {
-        var bounds = new google.maps.LatLngBounds();
-        for (var b = 0; b < markerKeys.length; b++) {
-            bounds.extend(lokasyonMarkerlar[markerKeys[b]].getPosition());
-        }
-        harita.fitBounds(bounds, 50); // 50px padding
-        console.log("[map.js] Harita tüm lokasyonlara fitBounds yapıldı.");
-    }
+    // NOT: fitBounds kaldırıldı — zoom:3 korunacak, GPS ile kullanıcı konumuna merkezlenecek
+    // Böylece tüm şehirlerdeki (İstanbul, London, Kent) marker'lar görünür kalacak
 
     console.log("[map.js] Lokasyonlar haritaya eklendi.");
 }
