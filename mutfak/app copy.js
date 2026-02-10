@@ -19,10 +19,6 @@ window.addEventListener('DOMContentLoaded', async function() {
         // v2.0: index.json → GPS ile şehir bul → sadece o şehrin dosyasını yükle
         console.log("[app.js] 1/3 — Modüler veriler yükleniyor...");
         await statikVerileriYukle();
-        // ↓ BU SATIR EKLENMELİ
-        if (harita && window.oyunLokasyonlari && window.oyunLokasyonlari.length > 0) {
-            lokasyonlariHaritayaEkle();
-        }
 
         var sehirAdi = window.mevcutSehir ? window.mevcutSehir.name : 'Bilinmiyor';
         console.log("[app.js] Veriler yüklendi.",
