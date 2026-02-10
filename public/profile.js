@@ -466,4 +466,91 @@ async function profilDuzenleKaydet() {
     }
 }
 
+// ──────────────────────────────────────────────
+// HESABI SİL
+// ──────────────────────────────────────────────
+function hesabiSilOnay() {
+    console.log("[profile.js] Hesap silme onayı isteniyor...");
+
+    if (!mevcutKullanici) {
+        bildirimGoster("Oturum bulunamadı.", "hata");
+        return;
+    }
+
+    onayIste(
+        '🗑️ <strong>Hesabını silmek istediğine emin misin?</strong><br><br>' +
+        '⚠️ Bu işlem geri alınamaz!<br>' +
+        'Tüm verilerin (profil, puanlar, rozetler, kuponlar) kalıcı olarak silinecek.<br><br>' +
+        '<strong style="color:var(--red);">Hesabı Sil</strong> butonuna basarak onaylıyorsun.',
+        function() {
+            hesabiSil();
+        }
+    );
+}
+
+async function hesabiSil() {
+    console.log("[profile.js] Hesap siliniyor...");
+
+    if (!mevcutKullanici) {
+        bildirimGoster("Oturum bulunamadı.", "hata");
+        return;
+    }
+
+    yuklemeGoster("Hesap siliniyor...");
+
+    try {
+        var uid = mevcutKullanici.uid;
+
+        // 1. Firebase DB'den kullanıcı verilerini sil
+        await db.ref('users/' + uid).remove();
+        await db.ref('leaderboard/' + uid).remove();
+        await db.ref('redemptions/' + uid).remove();
+
+        // Aktif oyuncu kayıtlarını temizle
+        try {
+            var aktifSnap = await db.ref('active_players').once('value');
+            var aktifData = aktifSnap.val();
+            if (aktifData) {
+                var updates = {};
+                Object.keys(aktifData).forEach(function(locId) {
+                    if (aktifData[locId] && aktifData[locId][uid]) {
+                        updates['active_players/' + locId + '/' + uid] = null;
+                    }
+                });
+                if (Object.keys(updates).length > 0) {
+                    await db.ref().update(updates);
+                }
+            }
+        } catch (e) {
+            console.warn("[profile.js] Aktif oyuncu temizleme hatası:", e);
+        }
+
+        // 2. Firebase Auth hesabını sil
+        await mevcutKullanici.delete();
+
+        yuklemeKapat();
+
+        // 3. Lokal değişkenleri temizle
+        mevcutKullanici = null;
+        kullaniciBilgileri = null;
+
+        // 4. Giriş ekranına yönlendir
+        altMenuGizle();
+        ekranGoster('ekran-giris');
+        bildirimGoster("Hesabın başarıyla silindi.", "bilgi");
+        console.log("[profile.js] Hesap silindi:", uid);
+
+    } catch (error) {
+        yuklemeKapat();
+        console.error("[profile.js] Hesap silme hatası:", error);
+
+        if (error.code === 'auth/requires-recent-login') {
+            bildirimGoster("Güvenlik nedeniyle tekrar giriş yapman gerekiyor. Çıkış yap, tekrar gir ve tekrar dene.", "uyari");
+        } else {
+            bildirimGoster("Hesap silinirken hata oluştu: " + error.message, "hata");
+        }
+    }
+}
+
 console.log("[profile.js] Profile modülü yüklendi.");
+
