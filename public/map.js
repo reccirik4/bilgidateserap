@@ -449,6 +449,9 @@ function navigasyonBaslat(hedefLat, hedefLng) {
             // Yürüme süresi bilgisi
             var bacak = sonuc.routes[0].legs[0];
             bildirimGoster("🚶 " + bacak.distance.text + " — " + bacak.duration.text, "bilgi");
+            // Navigasyon kapat butonunu göster
+            var navKapatBtn = document.getElementById('nav-kapat-btn');
+            if (navKapatBtn) navKapatBtn.classList.remove('gizli');
         } else {
             console.error("[map.js] Navigasyon hatası:", durum);
             // Fallback: Google Maps'te aç
@@ -462,6 +465,9 @@ function navigasyonTemizle() {
     if (directionsRenderer) {
         directionsRenderer.setDirections({ routes: [] });
     }
+    // Butonu gizle
+    var navKapatBtn = document.getElementById('nav-kapat-btn');
+    if (navKapatBtn) navKapatBtn.classList.add('gizli');
 }
 
 // Google Maps uygulamasında aç (fallback)

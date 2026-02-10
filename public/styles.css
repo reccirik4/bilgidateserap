@@ -415,6 +415,29 @@
             justify-content: center;
         }
 
+        .nav-kapat-btn {
+            position: absolute;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(220, 53, 69, 0.92);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: opacity var(--transition);
+        }
+
+        .nav-kapat-btn:active {
+            opacity: 0.8;
+        }
+
         /* ========== ALT SAYFA (BOTTOM SHEET) ========== */
         .alt-sayfa {
             position: fixed;
