@@ -18,7 +18,7 @@ function ekranGoster(ekranId) {
     for (var i = 0; i < ekranlar.length; i++) {
         ekranlar[i].classList.add('gizli');
     }
-
+ 
     // Bottom sheet'i de kapat
     mekanDetayKapat();
 
