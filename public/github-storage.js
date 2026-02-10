@@ -28,7 +28,7 @@ var githubShaKayitlari = {};
 async function githubDosyaOku(dosya) {
     try {
         var response = await fetch(
-            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + dosya, {
+            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + githubKlasor + dosya, {
             headers: {
                 'Authorization': 'token ' + token,
                 'Accept': 'application/vnd.github.v3+json'
@@ -83,7 +83,7 @@ async function githubDosyaYaz(dosya, icerik, sha) {
         }
 
         var response = await fetch(
-            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + dosya, {
+            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + githubKlasor + dosya, {
             method: 'PUT',
             headers: {
                 'Authorization': 'token ' + token,

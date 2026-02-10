@@ -28,7 +28,7 @@ var githubShaKayitlari = {};
 async function githubDosyaOku(dosya) {
     try {
         var response = await fetch(
-            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + githubKlasor + dosya, {
+            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + dosya, {
             headers: {
                 'Authorization': 'token ' + token,
                 'Accept': 'application/vnd.github.v3+json'
@@ -83,7 +83,7 @@ async function githubDosyaYaz(dosya, icerik, sha) {
         }
 
         var response = await fetch(
-            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + githubKlasor + dosya, {
+            'https://api.github.com/repos/' + kullaniciAdi + '/' + repoAdi + '/contents/' + dosya, {
             method: 'PUT',
             headers: {
                 'Authorization': 'token ' + token,
@@ -118,7 +118,7 @@ async function githubDosyaYaz(dosya, icerik, sha) {
 // ANA BAŞLATMA: index.json oku → GPS ile şehir bul → şehir yükle
 // ──────────────────────────────────────────────
 async function statikVerileriYukle() {
-    console.log("[github-storage.js] v2.0 — Tüm şehirler yükleniyor...");
+    console.log("[github-storage.js] v2.0 — Modüler veri yükleme başlıyor...");
 
     try {
         // 1. Ana index dosyasını oku (1 API çağrısı)
@@ -132,44 +132,21 @@ async function statikVerileriYukle() {
             window.sehirIndex = ornekIndex();
         }
 
-        // 2. GPS ile en yakın şehri bul (mevcutSehir referansı için — işletmeler vb.)
+        // 2. GPS ile en yakın şehri bul
         var secilenSehir = await enYakinSehriBul();
         window.mevcutSehir = secilenSehir;
-        console.log("[github-storage.js] En yakın şehir:", secilenSehir.name, "(id:", secilenSehir.id + ")");
+        console.log("[github-storage.js] Seçilen şehir:", secilenSehir.name, "(id:", secilenSehir.id + ")");
 
-        // 3. TÜM aktif şehirlerin verilerini yükle ve lokasyonları birleştir
-        window.oyunLokasyonlari = [];
-        window.tumSehirVerileri = {};
+        // 3. Seçilen şehrin verilerini yükle (1 API çağrısı)
+        await sehirVerisiYukle(secilenSehir);
 
-        for (var i = 0; i < window.sehirIndex.cities.length; i++) {
-            var sehir = window.sehirIndex.cities[i];
-            if (!sehir.isActive) continue;
-
-            try {
-                var sehirSonuc = await githubDosyaOku(sehir.file);
-                if (sehirSonuc.icerik && sehirSonuc.icerik.locations) {
-                    // Her lokasyona şehir bilgisi ekle (quiz'de lazım olabilir)
-                    for (var j = 0; j < sehirSonuc.icerik.locations.length; j++) {
-                        sehirSonuc.icerik.locations[j].cityId = sehir.id;
-                        sehirSonuc.icerik.locations[j].cityName = sehir.name;
-                    }
-                    window.oyunLokasyonlari = window.oyunLokasyonlari.concat(sehirSonuc.icerik.locations);
-                    window.tumSehirVerileri[sehir.id] = sehirSonuc.icerik;
-                    console.log("[github-storage.js] Şehir yüklendi:", sehir.name,
-                        "Lokasyon:", sehirSonuc.icerik.locations.length);
-                }
-            } catch (sehirHata) {
-                console.warn("[github-storage.js] Şehir yüklenemedi:", sehir.name, sehirHata);
-            }
-        }
-
-        // En yakın şehrin verisini mevcutSehirVeri olarak ayarla
-        window.mevcutSehirVeri = window.tumSehirVerileri[secilenSehir.id] || null;
-
-        console.log("[github-storage.js] Tüm şehirler yüklendi. Toplam lokasyon:", window.oyunLokasyonlari.length);
+        console.log("[github-storage.js] Statik veri yükleme tamamlandı.",
+            "Lokasyon:", window.oyunLokasyonlari.length,
+            "Şehir:", secilenSehir.name);
 
     } catch (error) {
         console.error("[github-storage.js] Statik veri yükleme genel hata:", error);
+        // Fallback: örnek veriler yükle
         if (window.oyunLokasyonlari.length === 0) window.oyunLokasyonlari = ornekLokasyonlar();
         if (Object.keys(window.soruHavuzu).length === 0) window.soruHavuzu = ornekSorular();
         if (window.odulListesi.length === 0) window.odulListesi = ornekOduller();
