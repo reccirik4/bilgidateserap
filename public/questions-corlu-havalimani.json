@@ -1,0 +1,82 @@
+[
+  {
+    "id": "q_corlu_01",
+    "text": "Çorlu Atatürk Havalimanı'nın IATA kodu nedir?",
+    "imageURL": null,
+    "type": "multiple_choice",
+    "difficulty": "easy",
+    "points": 10,
+    "timeLimit": 15,
+    "options": [
+      { "text": "TEQ", "correct": true },
+      { "text": "CRL", "correct": false },
+      { "text": "TKD", "correct": false },
+      { "text": "IST", "correct": false }
+    ],
+    "explanation": "Çorlu Atatürk Havalimanı'nın IATA kodu TEQ'dir."
+  },
+  {
+    "id": "q_corlu_02",
+    "text": "Çorlu hangi ilin ilçesidir?",
+    "imageURL": null,
+    "type": "multiple_choice",
+    "difficulty": "easy",
+    "points": 10,
+    "timeLimit": 15,
+    "options": [
+      { "text": "Tekirdağ", "correct": true },
+      { "text": "Edirne", "correct": false },
+      { "text": "Kırklareli", "correct": false },
+      { "text": "İstanbul", "correct": false }
+    ],
+    "explanation": "Çorlu, Tekirdağ iline bağlı bir ilçedir."
+  },
+  {
+    "id": "q_corlu_03",
+    "text": "Çorlu Atatürk Havalimanı ilk olarak hangi amaçla inşa edilmiştir?",
+    "imageURL": null,
+    "type": "multiple_choice",
+    "difficulty": "medium",
+    "points": 20,
+    "timeLimit": 20,
+    "options": [
+      { "text": "Askeri amaç", "correct": true },
+      { "text": "Sivil havacılık", "correct": false },
+      { "text": "Kargo taşımacılığı", "correct": false },
+      { "text": "Tarım ilaçlama", "correct": false }
+    ],
+    "explanation": "Havalimanı 1937'de askeri amaçlı inşa edilmiş, sonradan sivil havacılığa açılmıştır."
+  },
+  {
+    "id": "q_corlu_04",
+    "text": "Trakya bölgesinin en bilinen yöresel yemeği hangisidir?",
+    "imageURL": null,
+    "type": "multiple_choice",
+    "difficulty": "easy",
+    "points": 10,
+    "timeLimit": 15,
+    "options": [
+      { "text": "Tava ciğer", "correct": true },
+      { "text": "İskender kebap", "correct": false },
+      { "text": "Tantuni", "correct": false },
+      { "text": "Pide", "correct": false }
+    ],
+    "explanation": "Trakya bölgesi, özellikle Edirne ve Çorlu, tava ciğeri ile ünlüdür."
+  },
+  {
+    "id": "q_corlu_05",
+    "text": "Tekirdağ ilinin coğrafi bölgesi hangisidir?",
+    "imageURL": null,
+    "type": "multiple_choice",
+    "difficulty": "easy",
+    "points": 10,
+    "timeLimit": 15,
+    "options": [
+      { "text": "Marmara Bölgesi", "correct": true },
+      { "text": "Ege Bölgesi", "correct": false },
+      { "text": "Karadeniz Bölgesi", "correct": false },
+      { "text": "İç Anadolu Bölgesi", "correct": false }
+    ],
+    "explanation": "Tekirdağ, Marmara Bölgesi'nin Trakya kesiminde yer alır."
+  }
+]

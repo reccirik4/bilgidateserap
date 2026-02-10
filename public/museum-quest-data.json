@@ -190,6 +190,41 @@
         { "id": "reward_002", "title": "1 porsiyon ücretsiz köfte", "description": "Ana menüden 1 porsiyon köfte hediye", "category": "food", "type": "points", "requiredPoints": 5000, "promoRadius": 0, "businessId": "biz_002", "businessName": "Tarihi Sultanahmet Köftecisi", "businessLogo": "", "photoURL": "", "latitude": 41.0070, "longitude": 28.9760, "isActive": true },
         { "id": "reward_003", "title": "%30 indirim", "description": "Tüm hediyelik eşyalarda geçerli", "category": "shopping", "type": "points", "requiredPoints": 3000, "promoRadius": 0, "businessId": "biz_003", "businessName": "Grand Bazaar Hediyelik", "businessLogo": "", "photoURL": "", "latitude": 41.0107, "longitude": 28.9681, "isActive": true }
       ]
+    },
+    {
+      "id": "corlu",
+      "name": "Çorlu",
+      "center": { "lat": 41.1590, "lng": 27.8003 },
+      "zoom": 13,
+      "isActive": true,
+      "locations": [
+        {
+          "id": "corlu-havalimani",
+          "name": "Çorlu Atatürk Havalimanı (Test)",
+          "description": "Tekirdağ iline bağlı Çorlu ilçesinde bulunan havalimanı. 1937'de askeri amaçlı inşa edilmiş, sonradan sivil havacılığa da açılmıştır. IATA kodu TEQ.",
+          "questionsFile": "questions-corlu-havalimani.json",
+          "latitude": 41.1382,
+          "longitude": 27.9192,
+          "address": "Çorlu Atatürk Havalimanı, 59860 Çorlu/Tekirdağ",
+          "difficulty": "easy",
+          "questionCount": 5,
+          "entryRadius": 2000,
+          "exitRadius": 5000,
+          "photoURL": "",
+          "isActive": true,
+          "category": "history"
+        }
+      ],
+      "isletmeler": [
+        { "id": "biz-corlu-01", "name": "Çorlu Tava Ciğer Salonu", "description": "Çorlu merkezde geleneksel Trakya tava ciğeri sunan meşhur lokanta.", "address": "Reşadiye Mah., Omurtak Cad. No:45, Çorlu/Tekirdağ", "latitude": 41.1598, "longitude": 27.7995, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-corlu-02", "name": "Havalimanı Cafe Lounge", "description": "Çorlu Atatürk Havalimanı terminal binasındaki kafe ve bekleme salonu.", "address": "Çorlu Atatürk Havalimanı Terminal, Çorlu/Tekirdağ", "latitude": 41.1380, "longitude": 27.9188, "phone": "", "website": "", "logoURL": "", "isActive": true },
+        { "id": "biz-corlu-03", "name": "Trakya Hediyelik", "description": "Çorlu çarşısında yerel Trakya ürünleri ve hediyelik eşya dükkanı. Peynir, şarap ve el işleri.", "address": "Muhittin Mah., Çarşı Cad. No:18, Çorlu/Tekirdağ", "latitude": 41.1575, "longitude": 27.7980, "phone": "", "website": "", "logoURL": "", "isActive": true }
+      ],
+      "oduller": [
+        { "id": "reward-corlu-01", "title": "Ücretsiz Tava Ciğer Porsiyon", "description": "Çorlu Tava Ciğer Salonu'nda bir porsiyon tava ciğer ikramı.", "category": "food", "type": "free", "requiredPoints": 0, "promoRadius": 500, "businessId": "biz-corlu-01", "businessName": "Çorlu Tava Ciğer Salonu", "businessLogo": "", "photoURL": "", "latitude": 41.1598, "longitude": 27.7995, "isActive": true },
+        { "id": "reward-corlu-02", "title": "Ücretsiz Türk Kahvesi", "description": "Havalimanı Cafe Lounge'da bir adet Türk kahvesi ikramı.", "category": "drink", "type": "points", "requiredPoints": 500, "promoRadius": 0, "businessId": "biz-corlu-02", "businessName": "Havalimanı Cafe Lounge", "businessLogo": "", "photoURL": "", "latitude": 41.1380, "longitude": 27.9188, "isActive": true },
+        { "id": "reward-corlu-03", "title": "%25 İndirim Trakya Ürünleri", "description": "Trakya Hediyelik'te tüm yerel ürünlerde %25 indirim.", "category": "shopping", "type": "points", "requiredPoints": 1000, "promoRadius": 0, "businessId": "biz-corlu-03", "businessName": "Trakya Hediyelik", "businessLogo": "", "photoURL": "", "latitude": 41.1575, "longitude": 27.7980, "isActive": true }
+      ]
     }
   ]
 }
