@@ -1079,7 +1079,7 @@ function birlikteQuizMesafeKontrol() {
         partnerKonum.lat, partnerKonum.lng
     );
 
-    if (mesafe > 150) {
+    if (mesafe > 50) {
         // 50m aşıldı — 1x'e düşür, KALICI
         birlikteMesafeKayip = true;
         mevcutQuiz.birlikteCarpan = 1;
